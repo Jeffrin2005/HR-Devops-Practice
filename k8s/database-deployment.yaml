@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hr-database-deployment
+spec:
+  replicas: 1 # Database should usually be 1 replica unless clustered
+  selector:
+    matchLabels:
+      app: hr-database
+  template:
+    metadata:
+      labels:
+        app: hr-database
+    spec:
+      containers:
+      - name: mongo-container
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: mongo-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongo-storage
+        persistentVolumeClaim:
+          claimName: hr-mongo-pvc

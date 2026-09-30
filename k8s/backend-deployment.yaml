@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hr-backend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hr-backend
+  template:
+    metadata:
+      labels:
+        app: hr-backend
+    spec:
+      containers:
+      - name: backend-container
+        image: hr-backend:latest # Jenkins will update this later
+        ports:
+        - containerPort: 5000
+        env:
+        - name: MONGO_URI
+          value: "mongodb://hr-database-service:27017/hr_db"

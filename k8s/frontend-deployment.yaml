@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hr-frontend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hr-frontend
+  template:
+    metadata:
+      labels:
+        app: hr-frontend
+    spec:
+      containers:
+      - name: frontend-container
+        image: hr-frontend:latest # Jenkins will update this later
+        ports:
+        - containerPort: 80
