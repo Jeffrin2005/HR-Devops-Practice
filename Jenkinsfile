@@ -1,35 +1,44 @@
 pipeline {
     agent any
 
+    // In production, we define our Docker Hub credentials here
+    environment {
+        DOCKER_CREDS = credentials('docker-hub-credentials')
+        DOCKER_USERNAME = 'jeffrinjojo' // Replace with your actual DockerHub username
+    }
+
     stages {
         stage('Checkout Code') {
             steps {
-                echo "Pulling the latest code from GitHub..."
-                // In reality, this would be: git 'https://github.com/your-repo.git'
+                // Jenkins automatically pulls the code from GitHub based on our SCM settings!
+                echo "Code pulled successfully."
             }
         }
         
         stage('Run Unit Tests') {
             steps {
-                echo "Running npm install..."
-                echo "Running npm test..."
-                echo "All tests passed successfully!"
+                dir('server') {
+                    // This tells Jenkins to go into the server folder and run tests
+                    sh 'npm install'
+                    sh 'npm test'
+                }
             }
         }
         
         stage('Build Docker Images') {
             steps {
-                echo "Running: docker build -t hr-frontend:latest ./frontend"
-                echo "Running: docker build -t hr-backend:latest ./server"
-                echo "Images built successfully!"
+                // The REAL docker build commands
+                sh "docker build -t ${DOCKER_USERNAME}/hr-frontend:latest ./frontend"
+                sh "docker build -t ${DOCKER_USERNAME}/hr-backend:latest ./server"
             }
         }
 
         stage('Push to DockerHub') {
             steps {
-                echo "Pushing frontend to DockerHub..."
-                echo "Pushing backend to DockerHub..."
-                echo "Images pushed successfully! ArgoCD will now take over."
+                // This logs into DockerHub and securely pushes the heavy images to the internet
+                sh "echo \$DOCKER_CREDS_PSW | docker login -u \$DOCKER_CREDS_USR --password-stdin"
+                sh "docker push ${DOCKER_USERNAME}/hr-frontend:latest"
+                sh "docker push ${DOCKER_USERNAME}/hr-backend:latest"
             }
         }
     }
