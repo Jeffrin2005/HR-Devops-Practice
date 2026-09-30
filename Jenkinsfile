@@ -1,6 +1,8 @@
 pipeline {
     agent any
-
+    tools {
+        nodejs 'Node18'
+    }
     // In production, we define our Docker Hub credentials here
     environment {
         DOCKER_CREDS = credentials('docker-hub-credentials')
