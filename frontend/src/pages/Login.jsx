@@ -42,6 +42,12 @@ const Login = () => {
           Employee Management System
         </h1>
         <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Login</h2>
+        
+        <div className="bg-blue-50 text-blue-800 text-sm p-3 rounded-lg mb-4 text-center">
+          <p className="font-bold mb-1">Demo Credentials:</p>
+          <p>Admin: admin@gmail.com / admin</p>
+          <p>Employee: employee@gmail.com / employee</p>
+        </div>
         {error && <p className="text-red-500">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
