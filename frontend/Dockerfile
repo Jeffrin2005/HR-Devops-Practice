@@ -18,6 +18,9 @@ FROM nginx:alpine
 # Copy the built files from Stage 1 into the Nginx container
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Copy the custom Nginx configuration to fix React routing
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Expose port 80 for web traffic
 EXPOSE 80
 
