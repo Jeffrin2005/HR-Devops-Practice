@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: frontend-container
-        image: hr-frontend:latest # Jenkins will update this later
+        image: jeffrinjojo/hr-frontend:v13
         ports:
         - containerPort: 80

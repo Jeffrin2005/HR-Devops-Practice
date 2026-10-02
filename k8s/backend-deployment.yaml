@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend-container
-        image: hr-backend:latest # Jenkins will update this later
+        image: jeffrinjojo/hr-backend:v13
         ports:
         - containerPort: 5000
         env:
