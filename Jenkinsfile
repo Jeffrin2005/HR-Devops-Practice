@@ -46,8 +46,8 @@ pipeline {
             steps {
                 echo "☸️ Updating Kubernetes image tags to ${IMAGE_TAG}..."
                 sh '''
-                    sed -i "s|image: ${DOCKER_USERNAME}/hr-frontend:.*|image: ${DOCKER_USERNAME}/hr-frontend:${IMAGE_TAG}|g" ${K8S_DIR}/*.yaml
-                    sed -i "s|image: ${DOCKER_USERNAME}/hr-backend:.*|image: ${DOCKER_USERNAME}/hr-backend:${IMAGE_TAG}|g" ${K8S_DIR}/*.yaml
+                    sed -i "s|image: .*hr-frontend:.*|image: ${DOCKER_USERNAME}/hr-frontend:${IMAGE_TAG}|g" ${K8S_DIR}/*.yaml
+                    sed -i "s|image: .*hr-backend:.*|image: ${DOCKER_USERNAME}/hr-backend:${IMAGE_TAG}|g" ${K8S_DIR}/*.yaml
                 '''
             }
         }
