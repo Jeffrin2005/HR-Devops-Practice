@@ -7,12 +7,13 @@ pipeline {
     environment {
         DOCKER_CREDS = credentials('docker-hub-credentials')
         DOCKER_USERNAME = 'jeffrinjojo' // Replace with your actual DockerHub username
+        IMAGE_TAG = "v${BUILD_NUMBER}"
+        K8S_DIR = 'k8s'
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                // Jenkins automatically pulls the code from GitHub based on our SCM settings!
                 echo "Code pulled successfully."
             }
         }
@@ -20,7 +21,6 @@ pipeline {
         stage('Run Unit Tests') {
             steps {
                 dir('server') {
-                    // This tells Jenkins to go into the server folder and run tests
                     sh 'npm install'
                     sh 'npm test'
                 }
@@ -29,18 +29,42 @@ pipeline {
         
         stage('Build Docker Images') {
             steps {
-                // The REAL docker build commands
-                sh "docker build -t ${DOCKER_USERNAME}/hr-frontend:latest ./frontend"
-                sh "docker build -t ${DOCKER_USERNAME}/hr-backend:latest ./server"
+                sh "docker build -t ${DOCKER_USERNAME}/hr-frontend:${IMAGE_TAG} ./frontend"
+                sh "docker build -t ${DOCKER_USERNAME}/hr-backend:${IMAGE_TAG} ./server"
             }
         }
 
         stage('Push to DockerHub') {
             steps {
-                // This logs into DockerHub and securely pushes the heavy images to the internet
                 sh "echo \$DOCKER_CREDS_PSW | docker login -u \$DOCKER_CREDS_USR --password-stdin"
-                sh "docker push ${DOCKER_USERNAME}/hr-frontend:latest"
-                sh "docker push ${DOCKER_USERNAME}/hr-backend:latest"
+                sh "docker push ${DOCKER_USERNAME}/hr-frontend:${IMAGE_TAG}"
+                sh "docker push ${DOCKER_USERNAME}/hr-backend:${IMAGE_TAG}"
+            }
+        }
+        
+        stage('Update Kubernetes Manifests') {
+            steps {
+                echo "☸️ Updating Kubernetes image tags to ${IMAGE_TAG}..."
+                sh '''
+                    sed -i "s|image: ${DOCKER_USERNAME}/hr-frontend:.*|image: ${DOCKER_USERNAME}/hr-frontend:${IMAGE_TAG}|g" ${K8S_DIR}/*.yaml
+                    sed -i "s|image: ${DOCKER_USERNAME}/hr-backend:.*|image: ${DOCKER_USERNAME}/hr-backend:${IMAGE_TAG}|g" ${K8S_DIR}/*.yaml
+                '''
+            }
+        }
+
+        stage('Commit & Push to GitHub') {
+            steps {
+                echo "📤 Pushing Kubernetes changes to GitHub..."
+                // NOTE: You must have a 'github-credentials' token saved in Jenkins for this to work!
+                withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                    sh '''
+                        git config user.name "Jenkins GitOps"
+                        git config user.email "jenkins@localhost"
+                        git add ${K8S_DIR}/
+                        git commit -m "Auto-update Kubernetes images to ${IMAGE_TAG}" || echo "No changes to commit"
+                        git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Jeffrin2005/HR-Devops-Practice.git HEAD:main
+                    '''
+                }
             }
         }
     }
