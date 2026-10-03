@@ -68,4 +68,17 @@ pipeline {
             }
         }
     }
+
+    post {
+        success {
+            mail to: 'jetsetterflash@gmail.com',
+                 subject: "✅ SUCCESS: Jenkins Build ${BUILD_NUMBER}",
+                 body: "The GitOps pipeline built and updated Kubernetes to version ${IMAGE_TAG} successfully!"
+        }
+        failure {
+            mail to: 'jetsetterflash@gmail.com',
+                 subject: "❌ FAILED: Jenkins Build ${BUILD_NUMBER}",
+                 body: "The Jenkins build failed! Please check the Jenkins logs."
+        }
+    }
 }
