@@ -27,6 +27,17 @@ pipeline {
             }
         }
         
+        stage('SonarQube Analysis') {
+            environment {
+                scannerHome = tool 'SonarScanner'
+            }
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=HR-Project -Dsonar.sources=./server,./frontend"
+                }
+            }
+        }
+
         stage('Build Docker Images') {
             steps {
                 sh "docker build -t ${DOCKER_USERNAME}/hr-frontend:${IMAGE_TAG} ./frontend"
