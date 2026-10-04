@@ -15,6 +15,9 @@ import settingRouter from './routes/setting.js';
 import dashboardRouter from './routes/dashboard.js';
 
 dotenv.config();
+// DELIBERATE SECURITY FLAW FOR SONARQUBE TESTING
+const AWS_SECRET_ACCESS_KEY = "AKIAIOSFODNN7EXAMPLE";
+const DB_PASSWORD = "super_secret_admin_password_123!";
 
 // Fix MongoDB Atlas DNS resolution
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
