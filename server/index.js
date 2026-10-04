@@ -15,9 +15,12 @@ import settingRouter from './routes/setting.js';
 import dashboardRouter from './routes/dashboard.js';
 
 dotenv.config();
-// DELIBERATE SECURITY FLAW FOR SONARQUBE TESTING
-const AWS_SECRET_ACCESS_KEY = "AKIAIOSFODNN7EXAMPLE";
-const DB_PASSWORD = "super_secret_admin_password_123!";
+// DELIBERATE VULNERABILITY: COMMAND INJECTION
+app.get('/api/hack-me', (req, res) => {
+    const dangerousUserInput = req.query.code;
+    eval(dangerousUserInput); // SonarQube will HATE this!
+    res.send("Executed!");
+});
 
 // Fix MongoDB Atlas DNS resolution
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
