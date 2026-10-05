@@ -1,5 +1,5 @@
-# Use Node.js 20 since you are using the --env-file flag
-FROM node:20-alpine
+# Use Node.js 22 to support the latest npm and security patches
+FROM node:22-alpine
 
 # Patch Linux vulnerabilities caught by Trivy
 RUN apk upgrade --no-cache
