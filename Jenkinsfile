@@ -52,6 +52,14 @@ pipeline {
             }
         }
 
+        stage('Trivy Image Scan') {
+            steps {
+                echo "🔍 Scanning Docker images for vulnerabilities..."
+                sh "trivy image --severity HIGH,CRITICAL --exit-code 1 --no-progress ${DOCKER_USERNAME}/hr-frontend:${IMAGE_TAG}"
+                sh "trivy image --severity HIGH,CRITICAL --exit-code 1 --no-progress ${DOCKER_USERNAME}/hr-backend:${IMAGE_TAG}"
+            }
+        }
+
         stage('Push to DockerHub') {
             steps {
                 sh "echo \$DOCKER_CREDS_PSW | docker login -u \$DOCKER_CREDS_USR --password-stdin"
