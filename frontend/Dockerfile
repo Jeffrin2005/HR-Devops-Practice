@@ -15,6 +15,9 @@ RUN npm run build
 # Stage 2: Serve the app with Nginx
 FROM nginx:alpine
 
+# Patch Linux vulnerabilities caught by Trivy
+RUN apk upgrade --no-cache
+
 # Copy the built files from Stage 1 into the Nginx container
 COPY --from=builder /app/dist /usr/share/nginx/html
 

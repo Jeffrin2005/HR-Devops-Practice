@@ -1,6 +1,9 @@
 # Use Node.js 20 since you are using the --env-file flag
 FROM node:20-alpine
 
+# Patch Linux vulnerabilities caught by Trivy
+RUN apk upgrade --no-cache
+
 # Set working directory inside the container
 WORKDIR /app
 
