@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend-container
-        image: jeffrinjojo/hr-backend:v23
+        image: jeffrinjojo/hr-backend:v32
         ports:
         - containerPort: 5000
         env:
