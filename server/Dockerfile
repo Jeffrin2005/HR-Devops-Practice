@@ -12,7 +12,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN rm -f package-lock.json && npm config set registry https://registry.npmjs.org/ && npm install
 
 # Copy the rest of your backend code
 COPY . .
