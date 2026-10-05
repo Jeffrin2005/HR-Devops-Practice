@@ -3,6 +3,7 @@ FROM node:20-alpine
 
 # Patch Linux vulnerabilities caught by Trivy
 RUN apk upgrade --no-cache
+RUN npm install -g npm@latest
 
 # Set working directory inside the container
 WORKDIR /app
