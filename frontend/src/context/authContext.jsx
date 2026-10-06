@@ -1,9 +1,9 @@
 import axios from 'axios'
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-const userContext = createContext()
+const UserContext = createContext()
 
-const authContext = ({children}) => {
+const AuthContext = ({children}) => {
     const [user, setUser] = useState(null)
     const [loading , setLoading] = useState(true)
     useEffect(() => {
@@ -24,7 +24,7 @@ const authContext = ({children}) => {
                setLoading(false)
             }
         } catch(error){
-           if(error.response && !error.response.data.error){
+           if(error.response && !error.response.data?.error){
             setUser(null)
            } 
          } finally {
@@ -41,11 +41,11 @@ const authContext = ({children}) => {
         localStorage.removeItem("token")
     }
     return(
-       <userContext.Provider value={{user, login, logout,loading}}>
+       <UserContext.Provider value={{user, login, logout,loading}}>
         {children}
-        </userContext.Provider>
+        </UserContext.Provider>
     )
 
 }
-export const useAuth = () => useContext(userContext)
-export default authContext
+export const useAuth = () => useContext(UserContext)
+export default AuthContext
