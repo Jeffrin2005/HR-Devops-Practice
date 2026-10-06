@@ -94,4 +94,12 @@ pipeline {
             }
         }
     }
+
+    post {
+        always {
+            mail to: 'jetsetterflash@gmail.com', // ⚠️ REPLACE THIS WITH YOUR ACTUAL EMAIL ⚠️
+                 subject: "Jenkins Pipeline: ${currentBuild.fullDisplayName} - ${currentBuild.result ?: 'SUCCESS'}",
+                 body: "The pipeline has finished.\n\nView the logs here: ${env.BUILD_URL}"
+        }
+    }
 }
