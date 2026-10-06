@@ -96,10 +96,26 @@ pipeline {
     }
 
     post {
-        always {
-            mail to: 'jetsetterflash@gmail.com', // ⚠️ REPLACE THIS WITH YOUR ACTUAL EMAIL ⚠️
-                 subject: "Jenkins Pipeline: ${currentBuild.fullDisplayName} - ${currentBuild.result ?: 'SUCCESS'}",
-                 body: "The pipeline has finished.\n\nView the logs here: ${env.BUILD_URL}"
+        success {
+            echo "🎉 CI/CD + GitOps pipeline completed!"
+            echo "🚀 Argo CD will automatically deploy the new image."
+            
+            try {
+                mail to: 'jetsetterflash@gmail.com',
+                     subject: "✅ SUCCESS: Jenkins Pipeline ${currentBuild.fullDisplayName}",
+                     body: "Great news! The pipeline finished successfully.\n\nView the logs here: ${env.BUILD_URL}"
+            } catch (Exception e) {
+                echo "⚠️ Failed to send success email. Please check Jenkins Global Email Settings. Error: ${e.message}"
+            }
+        }
+        failure {
+            try {
+                mail to: 'jetsetterflash@gmail.com',
+                     subject: "❌ FAILURE: Jenkins Pipeline ${currentBuild.fullDisplayName}",
+                     body: "Uh oh! The pipeline failed.\n\nPlease check the logs to see what went wrong: ${env.BUILD_URL}"
+            } catch (Exception e) {
+                echo "⚠️ Failed to send failure email. Please check Jenkins Global Email Settings. Error: ${e.message}"
+            }
         }
     }
 }
