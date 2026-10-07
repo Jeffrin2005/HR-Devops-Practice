@@ -8,7 +8,7 @@ pipeline {
         DOCKER_CREDS = credentials('docker-hub-credentials')
         DOCKER_USERNAME = 'jeffrinjojo' // Replace with your actual DockerHub username
         IMAGE_TAG = "v${BUILD_NUMBER}"
-        K8S_DIR = 'k8s'
+        K8S_DIR = 'gitops/apps/hr-app/base'
     }
 
     stages {
@@ -20,7 +20,7 @@ pipeline {
         
         stage('Run Unit Tests') {
             steps {
-                dir('server') {
+                dir('app/server') {
                     sh 'npm install'
                     sh 'npm test'
                 }
@@ -33,7 +33,7 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('sonar-server') {
-                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=HR-Project -Dsonar.sources=./server,./frontend"
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=HR-Project -Dsonar.sources=./app/server,./app/frontend"
                 }
             }
         }
@@ -47,8 +47,8 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                sh "docker build -t ${DOCKER_USERNAME}/hr-frontend:${IMAGE_TAG} ./frontend"
-                sh "docker build -t ${DOCKER_USERNAME}/hr-backend:${IMAGE_TAG} ./server"
+                sh "docker build -t ${DOCKER_USERNAME}/hr-frontend:${IMAGE_TAG} ./app/frontend"
+                sh "docker build -t ${DOCKER_USERNAME}/hr-backend:${IMAGE_TAG} ./app/server"
             }
         }
 
