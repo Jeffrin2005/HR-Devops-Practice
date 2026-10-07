@@ -8,7 +8,7 @@ pipeline {
         DOCKER_CREDS = credentials('docker-hub-credentials')
         DOCKER_USERNAME = 'jeffrinjojo' // Replace with your actual DockerHub username
         IMAGE_TAG = "v${BUILD_NUMBER}"
-        K8S_DIR = 'gitops/apps/hr-app/base'
+        K8S_DIR = 'k8s/base'
     }
 
     stages {
