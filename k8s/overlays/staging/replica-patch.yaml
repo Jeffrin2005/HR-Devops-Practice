@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hr-frontend-deployment
+spec:
+  replicas: 2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hr-backend-deployment
+spec:
+  replicas: 2
