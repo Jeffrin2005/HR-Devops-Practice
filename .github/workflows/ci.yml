@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'app/frontend/**'
+      - 'app/server/**'
 
 jobs:
   build-and-deploy:
@@ -29,14 +30,22 @@ jobs:
           push: true
           tags: jeffrinjojo/hr-frontend:latest, jeffrinjojo/hr-frontend:${{ github.sha }}
 
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./app/server
+          push: true
+          tags: jeffrinjojo/hr-backend:latest, jeffrinjojo/hr-backend:${{ github.sha }}
+
       - name: Update Kubernetes Manifests
         run: |
-          # Replace the old image tag with the new GitHub SHA tag
+          # Replace old image tags with the new GitHub SHA tag
           sed -i "s|image: jeffrinjojo/hr-frontend:.*|image: jeffrinjojo/hr-frontend:${{ github.sha }}|g" k8s/base/frontend-deployment.yaml
+          sed -i "s|image: jeffrinjojo/hr-backend:.*|image: jeffrinjojo/hr-backend:${{ github.sha }}|g" k8s/base/backend-deployment.yaml
           
           # Commit the change back to the repository so Argo CD detects it
           git config --global user.name 'GitHub Actions CI'
           git config --global user.email 'actions@github.com'
-          git add k8s/base/frontend-deployment.yaml
-          git commit -m "CI: Update frontend image tag to ${{ github.sha }}"
+          git add k8s/base/frontend-deployment.yaml k8s/base/backend-deployment.yaml
+          git commit -m "CI: Update frontend and backend image tags to ${{ github.sha }}"
           git push
