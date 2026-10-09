@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  hr-app-dashboard.json: |-
+    {
+      "title": "HR App Performance",
+      "panels": [
+        {
+          "type": "graph",
+          "title": "Frontend CPU Usage",
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total{pod=~\"hr-frontend-.*\"}[5m]))"
+            }
+          ]
+        }
+      ]
+    }

@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - prometheus.yaml
   - grafana.yaml
+  - grafana-dashboard-configmap.yaml
