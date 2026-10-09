@@ -20,3 +20,5 @@ spec:
         env:
         - name: MONGO_URI
           value: "mongodb://hr-database-service:27017/hr_db"
+        - name: JWT_KEY
+          value: "supersecretkey123"
