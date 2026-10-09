@@ -4,23 +4,7 @@ Welcome to the HR Employee Management System! This repository demonstrates a com
 
 ## 🏗️ Architecture Diagram
 
-```mermaid
-flowchart LR
-    Dev([Developer]) -->|git push| GH(GitHub)
-    
-    GH -->|triggers CI| Build[Build & Push Images]
-    Build -->|updates tag| GH
-    
-    GH -->|GitOps pull| Argo[Argo CD]
-    
-    Argo -->|deploys| Frontend[React Frontend]
-    Argo -->|deploys| Backend[Node.js Backend]
-    
-    Frontend -->|API calls| Backend
-    Backend -->|Reads/Writes| DB[(DocumentDB)]
-    
-    Users([End Users]) -->|HTTPS| Frontend
-```
+![Architecture Diagram](architecture.png)
 
 ---
 
