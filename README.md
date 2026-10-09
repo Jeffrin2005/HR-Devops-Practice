@@ -5,7 +5,7 @@ Welcome to the HR Employee Management System! This repository demonstrates a com
 ## 🏗️ Architecture Diagram
 
 ```mermaid
-graph LR
+graph TD
     Developer([Developer]) -->|git push| GitHub(GitHub Repository)
     
     subgraph CI Pipeline [GitHub Actions]
