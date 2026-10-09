@@ -27,13 +27,8 @@ module "iam" {
 module "eks" {
   source           = "./modules/eks"
   cluster_name     = "hr-cluster"
-  subnet_ids       = module.vpc.private_subnet_ids
+  subnet_ids       = module.vpc.public_subnet_ids
   cluster_role_arn = module.iam.cluster_role_arn
   node_role_arn    = module.iam.node_role_arn
 }
 
-module "rds" {
-  source     = "./modules/rds"
-  db_name    = "hr-database"
-  subnet_ids = module.vpc.private_subnet_ids
-}
