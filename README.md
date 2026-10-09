@@ -5,38 +5,21 @@ Welcome to the HR Employee Management System! This repository demonstrates a com
 ## 🏗️ Architecture Diagram
 
 ```mermaid
-graph TD
-    Developer([Developer]) -->|git push| GitHub(GitHub Repository)
+flowchart LR
+    Dev([Developer]) -->|git push| GH(GitHub)
     
-    subgraph CI Pipeline [GitHub Actions]
-        GitHub -->|triggers| Build[Build Docker Images]
-        Build --> Push[Push to DockerHub]
-        Push --> UpdateManifest[Update K8s Manifests in git]
-        UpdateManifest -->|commits tag| GitHub
-    end
-
-    subgraph AWS Cloud [AWS Cloud Infrastructure - Terraform]
-        subgraph EKS Cluster [Kubernetes EKS Cluster]
-            ArgoCD(Argo CD)
-            
-            subgraph hr-namespace [HR Platform Namespace]
-                Frontend[React Frontend Pods]
-                Backend[Node.js Backend Pods]
-                Prometheus(Prometheus)
-                Grafana(Grafana)
-            end
-            
-            Frontend -->|REST API| Backend
-        end
-        
-        DocDB[(AWS DocumentDB / MongoDB)]
-        Backend -->|Reads/Writes| DocDB
-    end
+    GH -->|triggers CI| Build[Build & Push Images]
+    Build -->|updates tag| GH
     
-    GitHub -->|Argo pulls manifests| ArgoCD
-    ArgoCD -->|deploys to| hr-namespace
+    GH -->|GitOps pull| Argo[Argo CD]
     
-    User([End Users]) -->|HTTPS| Frontend
+    Argo -->|deploys| Frontend[React Frontend]
+    Argo -->|deploys| Backend[Node.js Backend]
+    
+    Frontend -->|API calls| Backend
+    Backend -->|Reads/Writes| DB[(DocumentDB)]
+    
+    Users([End Users]) -->|HTTPS| Frontend
 ```
 
 ---
