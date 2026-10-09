@@ -1,0 +1,22 @@
+---
+- name: Deploy Application Configuration
+  hosts: kubernetes_nodes
+  become: yes
+  tasks:
+    - name: Ensure configuration directory exists
+      file:
+        path: /etc/hr-app/config
+        state: directory
+        mode: '0755'
+
+    - name: Copy environment variables template
+      template:
+        src: ../templates/env.j2
+        dest: /etc/hr-app/config/.env
+        mode: '0644'
+
+    - name: Restart application services if needed
+      systemd:
+        name: kubelet
+        state: restarted
+      when: ansible_os_family == 'RedHat'
