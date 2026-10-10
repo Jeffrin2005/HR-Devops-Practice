@@ -14,7 +14,7 @@ resource "aws_eks_node_group" "main" {
   subnet_ids      = var.subnet_ids
 
   scaling_config {
-    desired_size = 2
+    desired_size = 4
     max_size     = 4
     min_size     = 1
   }

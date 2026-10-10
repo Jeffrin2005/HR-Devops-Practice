@@ -1,0 +1,24 @@
+alertmanager:
+  config:
+    global:
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'jetsetterflash@gmail.com'
+      smtp_auth_username: 'jetsetterflash@gmail.com'
+      smtp_auth_password: 'sjhz kliy ctwe gqpi'
+      smtp_require_tls: true
+    route:
+      group_by: ['namespace']
+      group_wait: 10s
+      group_interval: 5m
+      repeat_interval: 1h
+      receiver: 'email-alert'
+      # We tell it to send the "Watchdog" test alert so you get an email instantly!
+      routes:
+        - matchers:
+            - alertname = "Watchdog"
+          receiver: 'email-alert'
+    receivers:
+      - name: 'email-alert'
+        email_configs:
+          - to: 'jetsetterflash@gmail.com'
+            send_resolved: true
