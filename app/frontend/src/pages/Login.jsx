@@ -45,8 +45,8 @@ const Login = () => {
         
         <div className="bg-blue-50 text-blue-800 text-sm p-3 rounded-lg mb-4 text-center">
           <p className="font-bold mb-1">Demo Credentials:</p>
-          <p>Admin: admin@gmail.com / admin</p>
-          <p>Employee: employee@gmail.com / employee</p>
+          <p>Admin: admin@gmail.com | Password: admin</p>
+          <p>Employee: employee@gmail.com | Password: employee</p>
         </div>
         {error && <p className="text-red-500">{error}</p>}
         <form onSubmit={handleSubmit}>
