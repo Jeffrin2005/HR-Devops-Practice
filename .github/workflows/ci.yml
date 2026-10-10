@@ -23,6 +23,18 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: SonarCloud Scan (Frontend & Backend Code)
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # Needed to authenticate to SonarCloud
+        with:
+          args: >
+            -Dsonar.organization=your-github-org
+            -Dsonar.projectKey=your-project-key
+            -Dsonar.sources=app/
+
+
       - name: Build and Push Frontend Image
         uses: docker/build-push-action@v4
         with:
@@ -36,6 +48,22 @@ jobs:
           context: ./app/server
           push: true
           tags: jeffrinjojo/hr-backend:latest, jeffrinjojo/hr-backend:${{ github.sha }}
+
+      - name: Run Trivy Security Scan (Frontend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'jeffrinjojo/hr-frontend:${{ github.sha }}'
+          format: 'table'
+          exit-code: '0' # Set to 1 to fail the pipeline if vulnerabilities are found
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy Security Scan (Backend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'jeffrinjojo/hr-backend:${{ github.sha }}'
+          format: 'table'
+          exit-code: '0' # Set to 1 to fail the pipeline if vulnerabilities are found
+          severity: 'CRITICAL,HIGH'
 
       - name: Update Kubernetes Manifests
         run: |
