@@ -7,6 +7,8 @@ on:
     paths:
       - 'app/frontend/**'
       - 'app/server/**'
+  workflow_dispatch: # This adds a manual 'Run Workflow' button in GitHub
+
 
 jobs:
   build-and-deploy:
