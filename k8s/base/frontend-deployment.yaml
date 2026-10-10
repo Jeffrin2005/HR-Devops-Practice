@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend-container
-        image: jeffrinjojo/hr-frontend:v42
+        image: jeffrinjojo/hr-frontend:348116318fe694af1cd5d29eabcbfbe00b86f405
         ports:
         - containerPort: 80
         resources:
