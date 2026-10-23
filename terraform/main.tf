@@ -32,3 +32,16 @@ module "eks" {
   node_role_arn    = module.iam.node_role_arn
 }
 
+module "rds" {
+  source     = "./modules/rds"
+  db_name    = "hr-docdb"
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnet_ids
+}
+
+output "docdb_endpoint" {
+  description = "AWS DocumentDB Cluster Endpoint"
+  value       = module.rds.db_endpoint
+}
+
+
