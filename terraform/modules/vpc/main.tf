@@ -39,7 +39,7 @@ resource "aws_subnet" "private" {
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
-  tags = { Name = "${var.vpc_name}-igw" }
+  tags   = { Name = "${var.vpc_name}-igw" }
 }
 
 resource "aws_route_table" "public" {

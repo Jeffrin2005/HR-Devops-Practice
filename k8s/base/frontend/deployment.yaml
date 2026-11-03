@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hr-frontend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hr-frontend
+  template:
+    metadata:
+      labels:
+        app: hr-frontend
+    spec:
+      containers:
+      - name: frontend-container
+        image: jeffrinjojo/hr-frontend:b3c444fc4ced83954de9de910e4182e415f5f85b
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+

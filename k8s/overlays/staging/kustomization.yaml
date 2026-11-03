@@ -6,19 +6,5 @@ resources:
 
 namePrefix: staging-
 
-# In Staging, we want 2 replicas to test load balancing before Prod
 patches:
-  - target:
-      kind: Deployment
-      name: hr-frontend
-    patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 2
-  - target:
-      kind: Deployment
-      name: hr-backend
-    patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 2
+  - path: replica-patch.yaml

@@ -6,19 +6,5 @@ resources:
 
 namePrefix: prod-
 
-# In Prod, we want 3 replicas (servers) running for high availability!
 patches:
-  - target:
-      kind: Deployment
-      name: hr-frontend
-    patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 3
-  - target:
-      kind: Deployment
-      name: hr-backend
-    patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 3
+  - path: replica-patch.yaml

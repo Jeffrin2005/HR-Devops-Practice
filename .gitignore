@@ -3,6 +3,7 @@ node_modules/
 dist/
 build/
 .env
+.env.*
 
 # Terraform
 **/.terraform/*
@@ -12,16 +13,13 @@ crash.log
 crash.*.log
 *.tfvars
 *.tfvars.json
+!terraform/environments/*.tfvars
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
 .terraformrc
 terraform.rc
-
-# Ansible
-*.retry
-*.log
 
 # Jenkins
 *.log

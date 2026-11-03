@@ -1,6 +1,8 @@
 # 🚀 Enterprise HR Management Platform (Cloud-Native)
 
-Welcome to the HR Employee Management System! This repository demonstrates a complete, production-grade **Enterprise DevOps Architecture** built from the ground up. It takes a modern MERN stack application and deploys it using strict GitOps principles, Infrastructure as Code, and Cloud-Native best practices on AWS (or local Kubernetes clusters).
+Welcome to the **HR Employee Management System** repository. This project demonstrates a production-grade **Enterprise DevOps Architecture** built from the ground up. It deploys a modern MERN stack application using GitOps principles, modular Infrastructure as Code (IaC), Kubernetes, and Cloud-Native observability and chaos engineering.
+
+---
 
 ## 🏗️ Architecture Diagram
 
@@ -8,77 +10,171 @@ Welcome to the HR Employee Management System! This repository demonstrates a com
 
 ---
 
-## 📂 Deep Dive: Repository Structure & Usage
+## 📂 Project Structure
 
-This repository strictly follows the Enterprise standard folder structure for separating concerns. Every file has a specific purpose in the DevOps lifecycle.
-
-### 1. `app/` (Developer Code)
-Contains the raw source code written by Software Engineers.
-*   `app/frontend/`: React application. Contains its own `Dockerfile` optimized with NGINX.
-*   `app/server/`: Node.js Express API. Contains its own `Dockerfile` for backend logic.
-
-### 2. `terraform/` (Infrastructure as Code)
-Used by DevOps Engineers to automatically provision physical hardware and networks in AWS. It uses a **Custom Modular Architecture** to ensure maximum security.
-*   `main.tf`: The Root Module. Connects the VPC, EKS, IAM, and RDS modules together.
-*   `modules/vpc/`: Builds the Virtual Private Cloud, Public Subnets, and Private Subnets.
-*   `modules/iam/`: Creates strict AWS IAM Security Roles & Managed Policies.
-*   `modules/eks/`: Provisions the Kubernetes Master Control Plane and EC2 Worker Nodes.
-*   `modules/rds/`: Provisions the managed DocumentDB (MongoDB) cluster.
-
-### 3. `k8s/` (Kubernetes Manifests & Overlays)
-Read by **Argo CD** to deploy the application into the cluster. We use **Kustomize** to avoid repeating code.
-*   `k8s/base/`: The core instructions (`Deployment`, `Service`, `PVC`) shared across all environments.
-*   `k8s/overlays/dev/`: Developer environment (1 Replica) for testing.
-*   `k8s/overlays/staging/`: QA environment (2 Replicas) for bug hunting.
-*   `k8s/overlays/prod/`: Customer environment (3 Replicas) for High Availability.
-
-### 4. `.github/` (Continuous Integration)
-Used by **GitHub's Servers** to automate the build process.
-*   `workflows/ci.yml`: The pipeline that triggers on `git push`. It builds the Docker images for both Frontend and Backend, pushes them to DockerHub, and automatically uses `sed` to update the Kubernetes manifests in `k8s/base/`.
-
-### 5. `ansible/` (Server Configuration Management)
-Used by DevOps Engineers to bootstrap servers via SSH.
-*   `inventory/*.ini`: Lists the IP addresses of servers in `dev`, `staging`, and `prod`.
-*   `playbooks/setup-bastion.yml`: Installs tools (Docker, AWS CLI, Kubectl) on jump-boxes.
-*   `playbooks/setup-eks.yml`: Bootstraps the new EKS cluster by installing Helm and Argo CD.
-
-### 6. `monitoring/` & `chaos/` (Observability & Resilience)
-*   `monitoring/`: Deploys **Prometheus** (to scrape CPU metrics) and **Grafana** (dashboards) into the cluster.
-*   `monitoring/grafana-dashboard-configmap.yaml`: Pre-built JSON dashboard to graph Frontend performance.
-*   `chaos/pod-delete-experiment.yaml`: A **Litmus Chaos** script that intentionally murders Pods every 10 seconds to prove the cluster automatically heals itself without customer downtime.
+```text
+HR-Devops-Practice/
+│
+├── app/
+│   ├── frontend/                       # Vite + React Frontend
+│   │   ├── public/
+│   │   ├── src/
+│   │   ├── Dockerfile
+│   │   ├── nginx.conf
+│   │   ├── package.json
+│   │   ├── package-lock.json
+│   │   └── .dockerignore
+│   │
+│   └── server/                         # Node.js + Express API Backend
+│       ├── controllers/
+│       ├── db/
+│       ├── middleware/
+│       ├── models/
+│       ├── public/
+│       ├── routes/
+│       ├── Dockerfile
+│       ├── package.json
+│       ├── package-lock.json
+│       └── .dockerignore
+│
+├── terraform/                          # Modular AWS Infrastructure as Code
+│   ├── main.tf
+│   ├── provider.tf
+│   ├── versions.tf
+│   ├── variables.tf
+│   ├── locals.tf
+│   ├── data.tf
+│   ├── outputs.tf
+│   ├── environments/
+│   │   ├── dev.tfvars
+│   │   ├── staging.tfvars
+│   │   └── prod.tfvars
+│   ├── modules/
+│   │   ├── vpc/
+│   │   ├── iam/
+│   │   ├── eks/
+│   │   └── documentdb/
+│   ├── .gitignore
+│   └── README.md
+│
+├── k8s/                                # Kubernetes Manifests & GitOps
+│   │
+│   ├── base/                           # Base microservices manifests
+│   │   ├── frontend/
+│   │   │   ├── deployment.yaml
+│   │   │   ├── service.yaml
+│   │   │   └── hpa.yaml
+│   │   ├── backend/
+│   │   │   ├── deployment.yaml
+│   │   │   └── service.yaml
+│   │   ├── database/
+│   │   │   ├── deployment.yaml
+│   │   │   ├── service.yaml
+│   │   │   └── pvc.yaml
+│   │   ├── networking/
+│   │   │   └── ingress.yaml
+│   │   └── kustomization.yaml
+│   │
+│   ├── overlays/                       # Environment-specific overlays
+│   │   ├── dev/
+│   │   │   ├── kustomization.yaml
+│   │   │   └── replica-patch.yaml
+│   │   ├── staging/
+│   │   │   ├── kustomization.yaml
+│   │   │   └── replica-patch.yaml
+│   │   └── prod/
+│   │       ├── kustomization.yaml
+│   │       └── replica-patch.yaml
+│   │
+│   ├── argocd/                         # GitOps Argo CD application definition
+│   │   └── hr-application.yaml
+│   │
+│   ├── monitoring/                     # Prometheus, Grafana & Alertmanager
+│   │   ├── prometheus/
+│   │   │   ├── deployment.yaml
+│   │   │   ├── service.yaml
+│   │   │   └── prometheus-config.yaml
+│   │   ├── grafana/
+│   │   │   ├── deployment.yaml
+│   │   │   ├── service.yaml
+│   │   │   └── dashboard-configmap.yaml
+│   │   └── alertmanager/
+│   │       └── values.yaml
+│   │
+│   └── chaos/                          # Chaos Engineering with Litmus Chaos
+│       └── pod-delete-experiment.yaml
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml                      # CI/CD GitHub Actions Pipeline
+│
+├── scripts/                            # Operational helper scripts
+│   ├── deploy.sh
+│   ├── destroy.sh
+│   └── validate.sh
+│
+├── docker-compose.yml                  # Local full-stack container orchestration
+├── architecture.png                    # Architectural reference diagram
+├── .gitignore                          # Root ignore rules
+└── README.md                           # Project documentation
+```
 
 ---
 
-## ⚙️ The GitOps Pipeline Workflow
+## ⚙️ DevOps Components & Workflow
 
-This project uses a modern **GitOps** deployment model, abandoning legacy push-based deployments.
+### 1. Developer Code (`app/`)
+*   **Frontend**: React (Vite + Tailwind CSS), multi-stage Docker build served via NGINX.
+*   **Server**: Node.js Express API connecting to DocumentDB / MongoDB with JWT authentication.
 
-1.  **Code Commit:** A developer pushes code to the `main` branch.
-2.  **Continuous Integration:** GitHub Actions automatically builds the new Docker images, pushes them to DockerHub, and updates the image tags in the `k8s/base` folder via a Git commit.
-3.  **Continuous Deployment:** **Argo CD**, running securely inside the Kubernetes cluster, detects the file change in this GitHub repository and automatically pulls the new deployment state into the live cluster. *GitHub never has access to the AWS credentials.*
+### 2. Infrastructure as Code (`terraform/`)
+*   Fully modular structure provisioning **VPC**, **IAM roles**, **EKS cluster & managed node groups**, and **DocumentDB cluster**.
+*   Multi-environment support via `environments/dev.tfvars`, `environments/staging.tfvars`, and `environments/prod.tfvars`.
+
+### 3. Kubernetes & GitOps (`k8s/`)
+*   **Base manifests** organized by microservice (`frontend/`, `backend/`, `database/`, `networking/`).
+*   **Kustomize overlays** dynamically scale replica counts per environment (`dev`: 1 replica, `staging`: 2 replicas, `prod`: 3 replicas).
+*   **Argo CD** tracks the repository and continuously syncs production state to the cluster.
+*   **Monitoring** includes Prometheus scraping, Grafana dashboards, and Alertmanager notification routing.
+*   **Chaos Engineering** verifies self-healing resilience with Litmus Chaos pod deletion experiments.
+
+### 4. CI/CD Pipeline (`.github/workflows/ci.yml`)
+1.  **Code Quality**: SonarCloud static analysis on every push.
+2.  **Container Build**: Builds and pushes Docker images to DockerHub.
+3.  **Security Scanning**: Trivy scans container images for CRITICAL/HIGH vulnerabilities.
+4.  **GitOps Sync**: Updates image tags directly in `k8s/base/frontend/deployment.yaml` and `k8s/base/backend/deployment.yaml`.
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### 1. Build the Infrastructure (AWS)
+### Run Locally with Docker Compose
 ```bash
-cd terraform/
+docker compose up -d
+```
+Access Frontend: `http://localhost:8080`  
+Access Backend: `http://localhost:5000`
+
+### Provision AWS Cloud Infrastructure
+```bash
+cd terraform
 terraform init
-terraform apply
+terraform plan -var-file="environments/dev.tfvars"
+terraform apply -var-file="environments/dev.tfvars"
 ```
 
-### 2. Bootstrap the Cluster
+### Validate Kubernetes Manifests
 ```bash
-cd ansible/
-ansible-playbook -i inventory/production.ini playbooks/setup-eks.yml
+./scripts/validate.sh
 ```
 
-### 3. Deploy the Application via GitOps
-Point Argo CD to the specific environment overlay you wish to use:
-*   `k8s/overlays/dev/`
-*   `k8s/overlays/staging/`
-*   `k8s/overlays/prod/`
+### Deploy to Kubernetes
+```bash
+# Deploy base or environment overlays
+./scripts/deploy.sh dev
+# or
+./scripts/deploy.sh prod
+```
 
 ---
-*Built with ❤️ and DevOps best practices.*
+*Built with ❤️ and modern DevOps best practices.*

@@ -6,19 +6,5 @@ resources:
 
 namePrefix: dev-
 
-# In Dev, we only want 1 replica (server) running to save money!
 patches:
-  - target:
-      kind: Deployment
-      name: hr-frontend
-    patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 1
-  - target:
-      kind: Deployment
-      name: hr-backend
-    patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 1
+  - path: replica-patch.yaml
