@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend-container
-        image: jeffrinjojo/hr-backend:b3c444fc4ced83954de9de910e4182e415f5f85b
+        image: jeffrinjojo/hr-backend:d6a15895ad12ad682b3c13cc882a4d5ad381e0a6
         ports:
         - containerPort: 5000
         env:
