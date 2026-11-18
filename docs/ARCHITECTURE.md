@@ -2,7 +2,7 @@
 
 [Project README](../README.md)
 
-![Kubernetes and AWS deployment design](../architecture.png)
+![Kubernetes and AWS deployment design](assets/architecture-overview-a014b6eaaf.png)
 
 ## Request flow
 

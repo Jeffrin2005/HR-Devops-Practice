@@ -4,9 +4,9 @@
 
 React and Express provide administrator and employee workflows, backed by MongoDB. This repository brings the application and its delivery configuration together: Docker, Kubernetes overlays, GitHub Actions, Argo CD, Terraform, Prometheus, Grafana, and recovery scripts.
 
-[Quick start](#quick-start) · [Architecture](docs/ARCHITECTURE.md) · [Operations](docs/OPERATIONS.md) · [CI/CD](docs/CI-CD.md) · [Interview guide](docs/INTERVIEW.md)
+[Quick start](#quick-start) · [Architecture](docs/ARCHITECTURE.md) · [Operations](docs/OPERATIONS.md) · [CI/CD](docs/CI-CD.md)
 
-![HR platform Kubernetes and AWS architecture](architecture.png)
+![HR platform architecture with technology icons](docs/assets/architecture-overview-a014b6eaaf.png)
 
 *Configured deployment design. The latest repairs were verified locally; applying and validating them in AWS is a separate step.*
 
@@ -88,8 +88,8 @@ k8s/chaos/          Optional Litmus manifest; separate installation required
 terraform/         AWS modules, environments, state, S3 workload IAM
 .github/           CI workflow and Dependabot
 scripts/           Validate, deploy, promote, backup, restore, diagrams
-docs/              Architecture, setup, operations, interview notes
-architecture.png   Main diagram generated from editable source
+docs/              Architecture, setup, operations, project guides
+architecture.png   Approved icon-based architecture illustration
 ```
 
 ## Local validation
@@ -118,7 +118,6 @@ These are dated local results, not a claim about a current GitHub run or live AW
 - [AWS Terraform and state](terraform/README.md)
 - [API access rules](app/server/README.md)
 - [Frontend development](app/frontend/README.md)
-- [Interview explanation and questions](docs/INTERVIEW.md)
 - [GitHub About description and topics](docs/REPOSITORY.md)
 
 ## Before an existing or production deployment
