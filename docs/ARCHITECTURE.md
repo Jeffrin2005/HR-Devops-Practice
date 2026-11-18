@@ -53,3 +53,5 @@ node scripts/render-diagrams.mjs
 ```
 
 These are architecture diagrams, not screenshots or evidence of a running cloud deployment.
+
+The README icon illustration was made with the built-in image-generation tool. Its prompt is in [architecture-image-prompt.txt](assets/architecture-image-prompt.txt). The editable diagrams remain technical references. S3 and the managed database are external services, not application pods; the illustration groups them visually with the application. Regenerating technical diagrams preserves the approved README illustration.
