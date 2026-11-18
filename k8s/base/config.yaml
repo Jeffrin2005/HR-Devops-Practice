@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hr-config
+data:
+  NODE_ENV: development
+  APP_ORIGIN: http://localhost:8080
+  AWS_REGION: us-east-1
+  TRUST_PROXY_HOPS: "2"
+  UPLOAD_BUCKET: ""

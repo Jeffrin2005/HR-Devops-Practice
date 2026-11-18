@@ -10,3 +10,7 @@ variable "vpc_id" {
   type = string
 }
 
+
+
+variable "client_security_group_id" { type = string }
+variable "instance_count" { type = number }

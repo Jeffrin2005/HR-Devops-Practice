@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
@@ -6,13 +7,12 @@ const ViewSalary = () => {
   const [salaries, setSalaries] = useState(null);
   const [filteredSalaries, setFilteredSalaries] = useState(null);
   const { id } = useParams();
-  let sno = 1;
 
-  const fetchSalaries = async () => {
+  const fetchSalaries = useCallback(async () => {
     try {
       const response = await axios.get(`/api/salary/${id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+
         },
       });
       if (response.data.success) {
@@ -24,11 +24,11 @@ const ViewSalary = () => {
         alert(error.message);
       }
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchSalaries();
-  }, []);
+  }, [fetchSalaries]);
 
   const filterSalaries = (q) => {
     const lowerQuery = q.toLowerCase();

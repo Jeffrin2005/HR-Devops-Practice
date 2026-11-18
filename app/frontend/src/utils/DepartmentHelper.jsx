@@ -1,25 +1,9 @@
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
-export const columns = [
-    {
-        name:"S No",
-        selector:(row) => row.sno
-    },
-    {
-        name:"Department Name",
-        selector:(row) => row.dep_name,
-        sortable:true
-    },
-    {
-        name:"Action",
-        selector:(row) => row.action
-    },  
-]
-
 export const DepartmentButtons = ({ Id , onDepartmentDelete }) => {
     const navigate = useNavigate();
     const handleDelete  = async () => {
-        const confirm = window.confirm("Are you sure you want to delete this department?")
+        const confirm = window.confirm("Archive this department? Employee and payroll history will be retained.")
         if(!confirm){
             return
         } 
@@ -28,7 +12,7 @@ export const DepartmentButtons = ({ Id , onDepartmentDelete }) => {
                 `/api/department/${Id}`,
                 {
                     headers:{
-                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                     }
                 });
             if(response.data.success){
@@ -52,7 +36,7 @@ export const DepartmentButtons = ({ Id , onDepartmentDelete }) => {
         <button
         className="px-3 py-1 bg-red-600 text-white"
         onClick={handleDelete}>
-        delete</button>
+        Archive</button>
         </div>
     )
 }

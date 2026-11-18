@@ -1,24 +1,11 @@
-# Use Node.js 22 to support the latest npm and security patches
-FROM node:22-alpine
-
-# Patch Linux vulnerabilities caught by Trivy
-RUN apk upgrade --no-cache
-RUN npm install -g npm@latest
-
-# Set working directory inside the container
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
 WORKDIR /app
-
-# Copy package.json and package-lock.json first (for caching)
-COPY package*.json ./
-
-# Install dependencies
-RUN rm -f package-lock.json && npm config set registry https://registry.npmjs.org/ && npm install
-
-# Copy the rest of your backend code
-COPY . .
-
-# Expose port 5000 
+ENV NODE_ENV=production
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /opt/yarn-v* /usr/local/bin/yarn /usr/local/bin/yarnpkg
+COPY --chown=node:node . .
+RUN mkdir -p /app/public/uploads && chown -R node:node /app/public/uploads
+USER node
 EXPOSE 5000
-
-# The command to start the app
-CMD ["node", "--env-file=.env", "index.js"]
+CMD ["node", "index.js"]

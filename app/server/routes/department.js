@@ -1,14 +1,14 @@
 import express from 'express';
-import authMiddleware from '../middleware/authMiddleware.js'
-import { addDepartment , getDepartments , getDepartment, updateDepartment
-    , deleteDepartment
- } from '../controllers/departmentController.js'
-
-const router = express.Router()
-
-router.get('/',authMiddleware,getDepartments)
-router.post('/add',authMiddleware,addDepartment)
-router.get('/:id',authMiddleware,getDepartment)
-router.put('/:id',authMiddleware,updateDepartment)
-router.delete('/:id',authMiddleware,deleteDepartment)
-export default router
+import auth from '../middleware/authMiddleware.js';
+import roles from '../middleware/roleMiddleware.js';
+import { z, text, validate, validateId } from '../lib/validation.js';
+import { addDepartment, getDepartments, getDepartment, updateDepartment, deleteDepartment } from '../controllers/departmentController.js';
+const router = express.Router();
+const schema = z.object({ dep_name: text, description: z.string().trim().max(2000).optional() });
+router.use(auth, roles(['admin']));
+router.get('/', getDepartments);
+router.post('/add', validate(schema), addDepartment);
+router.get('/:id', validateId, getDepartment);
+router.put('/:id', validateId, validate(schema.partial()), updateDepartment);
+router.delete('/:id', validateId, deleteDepartment);
+export default router;

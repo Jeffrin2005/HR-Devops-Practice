@@ -11,3 +11,11 @@ metadata:
   name: hr-backend-deployment
 spec:
   replicas: 3
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hr-frontend-hpa
+spec:
+  minReplicas: 3

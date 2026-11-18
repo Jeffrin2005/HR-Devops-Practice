@@ -7,14 +7,14 @@ const Detail = () => {
     const {id} = useParams()
     const [leave, setLeave] = useState(null)
     const navigate = useNavigate();
-    useEffect(() => { 
+    useEffect(() => {
         const fetchLeave = async () => {
-       
+
             try {
                 const response = await axios.get(
                     `/api/leave/detail/${id}`,{
                     headers:{
-                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                     }
                 })
                 if(response.data.success){
@@ -24,17 +24,17 @@ const Detail = () => {
                if(error.response && !error.response.data.success){
                 console.error("Fetch department error:", error.response.data.error);
                }
-            } 
+            }
         };
         fetchLeave();
-    },[]); 
-    
+    }, [id]);
+
     const changeStatus = async (id,status) => {
        try {
                 const response = await axios.put(
                     `/api/leave/${id}`,{status},{
                     headers:{
-                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                     }
                 })
                 if(response.data.success){
@@ -44,21 +44,21 @@ const Detail = () => {
                if(error.response && !error.response.data.success){
                 console.error("Fetch department error:", error.response.data.error);
                }
-            }                                                   
+            }
     }
 
     return (
         <>{leave ?(
-        <div className="max-w-3xl mx-auto mt-10 bg-white p-8 
+        <div className="max-w-3xl mx-auto mt-10 bg-white p-8
         rounded-md shadow-md">
             <h2 className="text-2xl font-bold mb-8 text-center">
         Leave Details
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-          <img src={`/${leave.employeeId.userID?.profileImage}`}
-          className="rounded-full border w-72" 
-            />  
+          <img src={`/api/uploads/${leave.employeeId.userID?.profileImage}`}
+          className="rounded-full border w-72"
+            />
             </div>
             <div className="flex space-x-3 mb-5">
                 <p className="text-lg font-bol">Name: </p>

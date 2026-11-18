@@ -17,7 +17,7 @@ const TakeAttendance = () => {
         `/api/attendance?date=${today}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+
           },
         }
       );
@@ -43,7 +43,7 @@ const TakeAttendance = () => {
       // fetch employees
       const { data } = await axios.get("/api/employee", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+
         },
       });
       if (data.success) {
@@ -91,7 +91,7 @@ const TakeAttendance = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+
           },
         }
       );

@@ -1,0 +1,38 @@
+# Helm release name must be monitoring. Install the pinned chart before the CRs.
+grafana:
+  persistence:
+    enabled: true
+    size: 5Gi
+  admin:
+    existingSecret: hr-grafana-admin
+    userKey: username
+    passwordKey: password
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    serviceMonitorSelector:
+      matchLabels:
+        release: monitoring
+    ruleSelector:
+      matchLabels:
+        release: monitoring
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 20Gi
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 2Gi

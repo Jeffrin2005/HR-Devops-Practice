@@ -1,23 +1,25 @@
-#!/bin/bash
-set -e
-
-ENV=${1:-"base"}
-
-echo "🚀 Starting DevOps Deployment Script..."
-
-if [ "$ENV" = "base" ]; then
-    echo "1. Applying Kubernetes Base Manifests..."
-    kubectl apply -k k8s/base/
-else
-    echo "1. Applying Kubernetes Overlay for environment: $ENV..."
-    kubectl apply -k "k8s/overlays/$ENV/"
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+environment=${1:-dev}
+case "$environment" in dev|staging|prod) ;; *) echo "Invalid environment" >&2; exit 1;; esac
+namespace="hr-$environment"
+if kubectl kustomize "k8s/overlays/$environment" | grep -q RELEASE_REQUIRED; then
+  echo "Promote verified release digests with scripts/promote.sh first." >&2
+  exit 1
 fi
-
-echo "2. Checking deployment rollout status..."
-kubectl rollout status deployment/hr-frontend-deployment --timeout=120s || true
-kubectl rollout status deployment/hr-backend-deployment --timeout=120s || true
-
-echo "3. Fetching Services..."
-kubectl get svc
-
-echo "✅ Deployment complete!"
+kubectl get namespace "$namespace" >/dev/null
+kubectl -n "$namespace" get secret hr-api-secret >/dev/null
+if [ "$environment" = dev ]; then
+  kubectl -n "$namespace" get secret hr-database-secret >/dev/null
+else
+  kubectl -n "$namespace" get secret hr-tls >/dev/null
+  if kubectl kustomize "k8s/overlays/$environment" | grep -q 'REPLACE_WITH\|example.com'; then
+    echo "Configure the real HTTPS hostname and private uploads bucket before deployment." >&2
+    exit 1
+  fi
+fi
+kubectl apply -k "k8s/overlays/$environment"
+kubectl -n "$namespace" rollout status deployment/hr-frontend-deployment --timeout=180s
+kubectl -n "$namespace" rollout status deployment/hr-backend-deployment --timeout=180s
+kubectl -n "$namespace" get deployments,services

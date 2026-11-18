@@ -2,16 +2,15 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
 import DataTable from 'react-data-table-component'
-import { columns, LeaveButtons } from '../../utils/LeaveHelper'
-
-const Table = () => {
+import { columns } from '../../utils/LeaveData';
+import { LeaveButtons } from '../../utils/LeaveHelper';const Table = () => {
     const [leaves, setLeaves] = useState(null)
     const [filteredLeaves , setFilteredLeaves]  = useState(null)      
     const fetchLeaves = async () => {
         try {
             const response = await axios.get('/api/leave',{
                 headers:{
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                 }
             })
             if(response.data.success){

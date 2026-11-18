@@ -1,25 +1,20 @@
-import jwt from "jsonwebtoken";
-import User from "../models/User.js";
-const verifyUser = async (req,res,next) => {
-    try {
-        const token = req.headers.authorization.split(' ')[1];
-        if(!token){
-            return res.status(404).json({ success: false, error: "Token Not provided" });
-        }
-        const decoded = jwt.verify(token, process.env.JWT_KEY);
-        if(!decoded){
-            return res.status(404).json({ success: false, error: "Token Not Valid" });
-        }
-        const user = await User.findById({_id:decoded._id}).select('-password')
-        if(!user){
-            return res.status(404).json({ success: false, error: "User Not Found" });
-        }
-        req.user = user;
-        next();
-        
-    } catch (error) {
-        return res.status(500).json({ success: false, error: "Server side error" });
-    }
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import { cookieName } from '../lib/session.js';
+export default async function verifyUser(req, res, next) {
+  const header = req.get('authorization');
+  const token = req.cookies?.[cookieName] || (header?.startsWith('Bearer ') ? header.slice(7) : null);
+  if (!token) return res.status(401).json({ success: false, error: 'Authentication required' });
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_KEY, { algorithms: ['HS256'], issuer: 'hr-api', audience: 'hr-app' });
+  } catch {
+    return res.status(401).json({ success: false, error: 'Session expired or invalid' });
+  }
+  try {
+    const user = await User.findById(decoded._id);
+    if (!user || !user.active || decoded.version !== user.tokenVersion) return res.status(401).json({ success: false, error: 'Session expired or invalid' });
+    req.user = user;
+    next();
+  } catch (error) { next(error); }
 }
-
-export default verifyUser

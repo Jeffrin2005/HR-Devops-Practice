@@ -1,40 +1,13 @@
-import Salary from "../models/Salary.js";
-import Employee from "../models/Employee.js";
-
-const addSalary = async (req, res) => {
-    try{
-        const {employeeId,basicSalary,allowances,deductions,payDate} = req.body;
-        const totalSalary = parseInt(basicSalary) + parseInt(allowances) - parseInt(deductions);
-        const newSalary = new Salary({
-            employeeId,
-            basicSalary,
-            allowances,
-            deductions,
-            netSalary:totalSalary,
-            payDate
-        })
-        await newSalary.save()
-        return res.status(200).json({success:true,message:"Salary added successfully"})
-    }catch(error){
-        return res.status(500).json({success:false,message:"Server error in adding salary"})
-    }
-}
-
-const getSalary = async (req, res) => {
-    try{
-        const {id} = req.params;
-        let salary;
-         salary = await Salary.find({ employeeId: id }).populate('employeeId', 'employeeID');
-        if(!salary || salary.length < 1 ){
-           const employee = await Employee.findOne({ userID: id })
-           if (employee) {
-           salary = await Salary.find({ employeeId: employee._id }).populate('employeeId', 'employeeID');
-        }
-        }
-        return res.status(200).json({success:true,salary})
-    }catch(error){
-        return res.status(500).json({success:false,message:"Server error in getting salary"})
-    }
-}
-
-export {addSalary,getSalary}
+import Salary from '../models/Salary.js';
+import Employee from '../models/Employee.js';
+import { calculateSalary } from '../lib/money.js';
+export const addSalary = async (req, res) => {
+  if (!await Employee.exists({ _id: req.body.employeeId })) return res.status(404).json({ success: false, error: 'Employee not found' });
+  const { basicSalary, allowances = '0', deductions = '0' } = req.body;
+  await Salary.create({ ...req.body, allowances, deductions, netSalary: calculateSalary(basicSalary, allowances, deductions) });
+  res.status(201).json({ success: true, message: 'Salary added successfully' });
+};
+export const getSalary = async (req, res) => {
+  const salary = await Salary.find({ employeeId: req.employee._id }).sort({ payDate: -1 }).populate('employeeId', 'employeeID');
+  res.json({ success: true, salary });
+};

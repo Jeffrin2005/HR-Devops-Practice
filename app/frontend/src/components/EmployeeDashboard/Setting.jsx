@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/authContext'
+import { useAuth } from '../../context/useAuth'
 import axios from 'axios';
 const Setting = () => {
   const navigate = useNavigate()
-  const {user} = useAuth()
+  const {user, login} = useAuth()
   const [setting, setSetting] = useState({
     userId:user._id,
     oldPassword: '',
@@ -29,17 +29,18 @@ const Setting = () => {
                 setting,
                 {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+
                     },
                 }
             );
             if(response.data.success){
-                navigate('/admin-dashboard/employees');
+                login(null);
+                navigate('/login');
                 setError("")
             }
         } catch(error){
             if(error.response && !error.response.data.success){
-                setError(error.response.data.error)
+                setError(error.response.data.error || error.response.data.message)
             }
         }
     }
@@ -85,7 +86,7 @@ const Setting = () => {
             <label className="block text-slate-700 font-semibold mb-2">New Password</label>
             <input
               type="password"
-              name="newPassword"
+              name="newPassword" minLength={12} maxLength={72}
               value={setting.newPassword}
               onChange={handleChange}
               placeholder="Enter your new password"

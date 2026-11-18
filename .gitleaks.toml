@@ -1,0 +1,8 @@
+title = "HR source secret scan"
+[extend]
+useDefault = true
+# No real credentials belong in the working tree being scanned.
+[allowlist]
+description = "Generated dependencies and explicitly synthetic test signing keys"
+paths = ['''(^|/)node_modules/''', '''(^|/)dist/''', '''(^|/)\.terraform/''']
+regexes = ['''(?:test-only|integration-test)-key-[0-9]+''']

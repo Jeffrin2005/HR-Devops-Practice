@@ -29,3 +29,13 @@ terraform.rc
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Local deployment inputs, plans, uploads, and test output
+*.tfplan
+*.tfplan.json
+!**/.env.example
+app/server/public/uploads/*
+!app/server/public/uploads/.gitkeep
+coverage/
+
+.validation/

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { fetchDepartments } from "../../utils/EmployeeHelper";
+import { fetchDepartments } from "../../utils/EmployeeData";
+
 import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom";
-import { getEmployees } from "../../utils/EmployeeHelper";
+import { useNavigate } from "react-router-dom";
+import { getEmployees } from "../../utils/EmployeeData";
+
 const Add = () => {
     const [salary ,setSalary] = useState({
         employeeId:null,
@@ -42,7 +44,7 @@ const Add = () => {
                 `/api/salary/add`,
                 salary,{
                 headers:{
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                 }   
              })
              if(response.data.success){
@@ -111,7 +113,7 @@ const Add = () => {
               Basic Salary
             </label>
             <input
-              type="number"
+              type="number" min="0" step="0.01"
               name="basicSalary"
               onChange={handleChange}
               placeholder="Enter basic salary amount"
@@ -125,7 +127,7 @@ const Add = () => {
               Allowances
             </label>
             <input
-              type="number"
+              type="number" min="0" step="0.01"
               name="allowances"
               onChange={handleChange}
               placeholder="Enter allowances amount"
@@ -139,7 +141,7 @@ const Add = () => {
               Deductions
             </label>
             <input
-              type="number"
+              type="number" min="0" step="0.01"
               name="deductions"
               onChange={handleChange}
               placeholder="Enter deductions amount"

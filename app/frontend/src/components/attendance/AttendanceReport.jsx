@@ -17,7 +17,7 @@ const AttendanceReport = () => {
         `/api/attendance?date=${date}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+
           },
         }
       );

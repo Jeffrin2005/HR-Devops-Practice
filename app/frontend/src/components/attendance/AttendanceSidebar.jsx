@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 
-const AttendanceSidebar = ({ selectedDate, onDateChange }) => {
+const AttendanceSidebar = ({ selectedDate }) => {
   const [attendanceData, setAttendanceData] = useState({
     present: [],
     absent: [],
@@ -19,7 +19,7 @@ const AttendanceSidebar = ({ selectedDate, onDateChange }) => {
         `/api/attendance?date=${date}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+
           },
         }
       );

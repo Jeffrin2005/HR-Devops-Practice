@@ -1,10 +1,11 @@
 import express from 'express';
-import authMiddleware from '../middleware/authMiddleware.js'
-
+import auth from '../middleware/authMiddleware.js';
+import roles from '../middleware/roleMiddleware.js';
+import access from '../middleware/employeeAccess.js';
+import { z, id, date, money, validate, validateId } from '../lib/validation.js';
 import { addSalary, getSalary } from '../controllers/salaryController.js';
-
-const router = express.Router()
-
-router.post('/add',authMiddleware,addSalary)
-router.get('/:id',authMiddleware,getSalary)
-export default router
+const router = express.Router();
+router.use(auth);
+router.post('/add', roles(['admin']), validate(z.object({ employeeId: id, basicSalary: money, allowances: money.optional(), deductions: money.optional(), payDate: date })), addSalary);
+router.get('/:id', validateId, access, getSalary);
+export default router;

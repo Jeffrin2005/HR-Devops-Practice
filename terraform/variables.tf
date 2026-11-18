@@ -46,3 +46,23 @@ variable "db_name" {
   default     = "hr-docdb"
 }
 
+
+
+variable "cluster_version" {
+  type    = string
+  default = "1.36"
+}
+variable "allowed_admin_cidrs" {
+  description = "Approved public API access ranges; empty means private endpoint only"
+  type        = list(string)
+  default     = []
+  validation {
+    condition     = alltrue([for cidr in var.allowed_admin_cidrs : can(cidrnetmask(cidr)) && cidr != "0.0.0.0/0"])
+    error_message = "Use specific approved IPv4 CIDRs, never 0.0.0.0/0."
+  }
+}
+variable "enable_documentdb" {
+  description = "Opt in after reviewing the plan; otherwise supply an external MongoDB replica-set URI"
+  type        = bool
+  default     = false
+}

@@ -1,81 +1,122 @@
-name: CI/CD Pipeline
-
+name: Validate and publish
 on:
+  pull_request:
   push:
-    branches:
-      - main
-    paths:
-      - 'app/frontend/**'
-      - 'app/server/**'
-  workflow_dispatch: # This adds a manual 'Run Workflow' button in GitHub
-
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hr-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
-  build-and-deploy:
+  validate:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            app/server/package-lock.json
+            app/frontend/package-lock.json
+      - name: Install locked packages
+        run: |
+          npm --prefix app/server ci --ignore-scripts
+          npm --prefix app/frontend ci --ignore-scripts
+      - name: Audit production packages
+        run: |
+          npm --prefix app/server audit --omit=dev --audit-level=high
+          npm --prefix app/frontend audit --omit=dev --audit-level=high
+      - name: Frontend lint and production build
+        run: |
+          npm --prefix app/frontend run lint
+          npm --prefix app/frontend run build
+      - name: Start disposable replica set
+        run: |
+          docker run -d --name hr-test-mongo -p 127.0.0.1:27017:27017 mongo:8.0 --replSet rs0 --bind_ip_all
+          for _ in {1..30}; do
+            if docker exec hr-test-mongo mongosh --quiet --eval 'db.adminCommand({ping:1})' >/dev/null; then break; fi
+            sleep 2
+          done
+          docker exec hr-test-mongo mongosh --quiet --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"127.0.0.1:27017"}]})'
+          for _ in {1..30}; do
+            if docker exec hr-test-mongo mongosh --quiet --eval 'if(!db.hello().isWritablePrimary)quit(1)' >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - name: API regression and database integration tests
+        env:
+          MONGODB_TEST_URL: mongodb://127.0.0.1:27017/hr_test?replicaSet=rs0
+        run: npm --prefix app/server test
+      - name: Remove disposable database
+        if: always()
+        run: docker rm -f hr-test-mongo || true
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          terraform_version: 1.16.2
+      - name: Validate infrastructure
+        run: |
+          terraform -chdir=terraform fmt -check -recursive
+          terraform -chdir=terraform init -backend=false -input=false
+          terraform -chdir=terraform validate
+          for environment in dev staging prod; do
+            kubectl kustomize "k8s/overlays/$environment" | docker run --rm -i ghcr.io/yannh/kubeconform:v0.7.0@sha256:85dbef6b4b312b99133decc9c6fc9495e9fc5f92293d4ff3b7e1b30f5611823c -strict -summary -kubernetes-version 1.36.0 -
+          done
+          kubectl kustomize k8s/monitoring >/dev/null
+          MONGO_USERNAME=validation MONGO_PASSWORD=validation JWT_KEY=validation docker compose config --quiet
+      - name: Validate workflow syntax
+        run: docker run --rm -v "$PWD/.github/workflows:/workflows:ro" --workdir /workflows rhysd/actionlint:1.7.7@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9 ci.yml
+      - name: Scan source for secrets
+        run: docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9 dir /repo --redact --config /repo/.gitleaks.toml
+  publish:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Build frontend
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: app/frontend
+          load: true
+          push: false
+          tags: jeffrinjojo/hr-frontend:${{ github.sha }}
+      - name: Build backend
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: app/server
+          load: true
+          push: false
+          tags: jeffrinjojo/hr-backend:${{ github.sha }}
+      - name: Scan frontend before publishing
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        with:
+          version: v0.76.2
+          image-ref: jeffrinjojo/hr-frontend:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          scanners: vuln,secret
+      - name: Scan backend before publishing
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        with:
+          version: v0.76.2
+          image-ref: jeffrinjojo/hr-backend:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          scanners: vuln,secret
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: SonarCloud Scan (Frontend & Backend Code)
-        uses: SonarSource/sonarcloud-github-action@master
+      - name: Publish immutable release and record digests
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # Needed to authenticate to SonarCloud
-        with:
-          args: >
-            -Dsonar.organization=jeffrin2005
-            -Dsonar.projectKey=Jeffrin2005_HR-Devops-Practice
-            -Dsonar.sources=app/
-
-      - name: Build and Push Frontend Image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./app/frontend
-          push: true
-          tags: jeffrinjojo/hr-frontend:latest, jeffrinjojo/hr-frontend:${{ github.sha }}
-
-      - name: Build and Push Backend Image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./app/server
-          push: true
-          tags: jeffrinjojo/hr-backend:latest, jeffrinjojo/hr-backend:${{ github.sha }}
-
-      - name: Run Trivy Security Scan (Frontend)
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'jeffrinjojo/hr-frontend:${{ github.sha }}'
-          format: 'table'
-          exit-code: '0' # Set to 1 to fail the pipeline if vulnerabilities are found
-          severity: 'CRITICAL,HIGH'
-
-      - name: Run Trivy Security Scan (Backend)
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'jeffrinjojo/hr-backend:${{ github.sha }}'
-          format: 'table'
-          exit-code: '0' # Set to 1 to fail the pipeline if vulnerabilities are found
-          severity: 'CRITICAL,HIGH'
-
-      - name: Update Kubernetes Manifests
+          RELEASE: ${{ github.sha }}
         run: |
-          # Replace old image tags with the new GitHub SHA tag
-          sed -i "s|image: jeffrinjojo/hr-frontend:.*|image: jeffrinjojo/hr-frontend:${{ github.sha }}|g" k8s/base/frontend/deployment.yaml
-          sed -i "s|image: jeffrinjojo/hr-backend:.*|image: jeffrinjojo/hr-backend:${{ github.sha }}|g" k8s/base/backend/deployment.yaml
-          
-          # Commit the change back to the repository so Argo CD detects it
-          git config --global user.name 'GitHub Actions CI'
-          git config --global user.email 'actions@github.com'
-          git add k8s/base/frontend/deployment.yaml k8s/base/backend/deployment.yaml
-          git commit -m "CI: Update frontend and backend image tags to ${{ github.sha }}"
-          git push
+          for image in hr-frontend hr-backend; do
+            docker push "jeffrinjojo/$image:$RELEASE"
+            digest=$(docker image inspect --format '{{index .RepoDigests 0}}' "jeffrinjojo/$image:$RELEASE")
+            printf '%s\n' "$digest" >> "$GITHUB_STEP_SUMMARY"
+          done
+          printf '\nPromote these digests with scripts/promote.sh and review the GitOps diff.\n' >> "$GITHUB_STEP_SUMMARY"

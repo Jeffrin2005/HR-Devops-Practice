@@ -1,89 +1,25 @@
-import Attendance from "../models/Attendance.js";
-import Employee from "../models/Employee.js";
-
-// Mark or update attendance for an employee for a specific date (defaults to today)
+import Attendance from '../models/Attendance.js';
+import Employee from '../models/Employee.js';
+import { date as dateSchema } from '../lib/validation.js';
+function day(value) {
+  const raw = value || new Date().toISOString().slice(0, 10);
+  if (!dateSchema.safeParse(raw).success) throw Object.assign(new Error('Invalid date; use YYYY-MM-DD'), { status: 400 });
+  return new Date(raw + 'T00:00:00.000Z');
+}
+const populate = { path: 'employee', populate: [{ path: 'userID', select: 'name profileImage' }, { path: 'department', select: 'dep_name' }] };
 export const markAttendance = async (req, res) => {
-  try {
-    const { employeeId, status, date } = req.body;
-
-    if (!employeeId || !status) {
-      return res.status(400).json({ success: false, error: "employeeId & status are required" });
-    }
-
-    const attendanceDate = date ? new Date(date) : new Date();
-    attendanceDate.setHours(0, 0, 0, 0); // normalize
-
-    // ensure employee exists
-    const employee = await Employee.findById(employeeId);
-    if (!employee) return res.status(404).json({ success: false, error: "Employee not found" });
-
-    const updated = await Attendance.findOneAndUpdate(
-      { employee: employeeId, date: attendanceDate },
-      { status },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    ).populate({ path: "employee", populate: { path: "userID department" } });
-
-    return res.status(200).json({ success: true, attendance: updated });
-  } catch (error) {
-    console.error("Mark attendance error", error);
-    return res.status(500).json({ success: false, error: "Server error while marking attendance" });
-  }
+  const { employeeId, status, date } = req.body;
+  if (!await Employee.exists({ _id: employeeId })) return res.status(404).json({ success: false, error: 'Employee not found' });
+  const attendance = await Attendance.findOneAndUpdate({ employee: employeeId, date: day(date) }, { status }, { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }).populate(populate);
+  res.json({ success: true, attendance });
 };
-
-// Get attendance list for a particular date
-export const getAttendanceByDate = async (req, res) => {
-  try {
-    const { date } = req.query;
-    const attendanceDate = date ? new Date(date) : new Date();
-    attendanceDate.setHours(0, 0, 0, 0);
-
-    const records = await Attendance.find({ date: attendanceDate }).populate({
-      path: "employee",
-      populate: [{ path: "userID" }, { path: "department" }],
-    });
-
-    return res.status(200).json({ success: true, records });
-  } catch (error) {
-    console.error("Get attendance by date error", error);
-    return res.status(500).json({ success: false, error: "Server error while fetching attendance" });
-  }
-};
-
-// Get attendance report for an employee (all records)
-export const getEmployeeAttendance = async (req, res) => {
-  try {
-    const { id } = req.params; // employee id
-
-    const records = await Attendance.find({ employee: id }).sort({ date: -1 });
-    return res.status(200).json({ success: true, records });
-  } catch (error) {
-    console.error("Employee attendance report error", error);
-    return res.status(500).json({ success: false, error: "Server error while fetching attendance report" });
-  }
-};
-
-// Admin summary of attendance for a range
+export const getAttendanceByDate = async (req, res) => res.json({ success: true, records: await Attendance.find({ date: day(req.query.date) }).populate(populate) });
+export const getEmployeeAttendance = async (req, res) => res.json({ success: true, records: await Attendance.find({ employee: req.params.id }).sort({ date: -1 }) });
 export const getAttendanceSummary = async (req, res) => {
-  try {
-    const { start, end } = req.query; // YYYY-MM-DD
-    const startDate = start ? new Date(start) : new Date();
-    const endDate = end ? new Date(end) : new Date();
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
-
-    const records = await Attendance.aggregate([
-      { $match: { date: { $gte: startDate, $lte: endDate } } },
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
-    return res.status(200).json({ success: true, summary: records });
-  } catch (error) {
-    console.error("Attendance summary error", error);
-    return res.status(500).json({ success: false, error: "Server error while fetching summary" });
-  }
+  const startDate = day(req.query.start);
+  const endDate = day(req.query.end);
+  if (endDate < startDate) return res.status(400).json({ success: false, error: 'End date must not precede start date' });
+  endDate.setUTCDate(endDate.getUTCDate() + 1);
+  const summary = await Attendance.aggregate([{ $match: { date: { $gte: startDate, $lt: endDate } } }, { $group: { _id: '$status', count: { $sum: 1 } } }]);
+  res.json({ success: true, summary });
 };

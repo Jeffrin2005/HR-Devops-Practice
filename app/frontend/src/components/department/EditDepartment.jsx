@@ -16,7 +16,7 @@ const EditDepartment = () => {
                 const response = await axios.get(
                     `/api/department/${id}`,{
                     headers:{
-                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                     }
                 })
                 if(response.data.success){
@@ -46,7 +46,7 @@ const EditDepartment = () => {
                 `/api/department/${id}`,
                 department,{
                 headers:{
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                 }   
              })
              if(response.data.success){

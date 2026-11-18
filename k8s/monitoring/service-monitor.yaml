@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: hr-backend
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames: [hr-dev, hr-staging, hr-prod]
+  selector:
+    matchLabels:
+      app: hr-backend
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

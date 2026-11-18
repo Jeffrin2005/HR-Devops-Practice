@@ -1,23 +1,22 @@
+import { useCallback } from 'react';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import DataTable from 'react-data-table-component';
-import { columns, DepartmentButtons } from '../../utils/DepartmentHelper';
+import { columns } from '../../utils/DepartmentData';
+import { DepartmentButtons } from '../../utils/DepartmentHelper';
 
 const DepartmentList = () => {
     const [departments , setDepartments] = useState([])
     const [depLoading, setDepLoading] = useState(false)
     const [filteredDepartments , setFilteredDepartments] = useState([])
-    const onDepartmentDelete =  () => {
-        fetchDepartments()
-    }
 
-    const fetchDepartments = async () => {
+    const fetchDepartments = useCallback(async function fetchDepartments() {
         setDepLoading(true)
         try {
             const response = await axios.get('/api/department',{
                 headers:{
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                 }
             })
             if(response.data.success){
@@ -28,7 +27,7 @@ const DepartmentList = () => {
                         sno: sno++,
                         dep_name: dep.dep_name,
                         action: <DepartmentButtons Id={dep._id}
-                        onDepartmentDelete={onDepartmentDelete} />,
+                        onDepartmentDelete={fetchDepartments} />,
                     })); 
                 setDepartments(data);
                 setFilteredDepartments(data) 
@@ -40,11 +39,11 @@ const DepartmentList = () => {
         } finally {
             setDepLoading(false)
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchDepartments()
-    },[])
+    },[fetchDepartments])
     const filterDepartments = (e) => {
         const records = departments.filter((dep)=>
             dep.dep_name.toLowerCase().includes(e.target.value.toLowerCase()))

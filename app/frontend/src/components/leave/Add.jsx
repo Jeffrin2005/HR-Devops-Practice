@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from "../../context/authContext";
+import { useAuth } from "../../context/useAuth";
 
 const Add = () => {
     const {user} = useAuth();
@@ -25,7 +25,7 @@ const Add = () => {
      const response = await axios.post('/api/leave/add', 
         payload, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+
         },
       });
       if(response.data.success){

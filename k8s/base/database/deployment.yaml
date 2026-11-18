@@ -4,6 +4,8 @@ metadata:
   name: hr-database-deployment
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: hr-database
@@ -12,16 +14,51 @@ spec:
       labels:
         app: hr-database
     spec:
+      automountServiceAccountToken: false
       containers:
-      - name: mongo-container
-        image: mongo:latest
-        ports:
-        - containerPort: 27017
-        volumeMounts:
-        - name: mongo-storage
-          mountPath: /data/db
+        - name: mongo-container
+          image: mongo:8.0@sha256:bdc216e9d5a6ec2cfdac789b5832fdab64cd32055f59885cae918a92de63c361
+          command: ["/bin/bash", "/opt/hr/mongo-entrypoint.sh"]
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: hr-database-secret
+                  key: username
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hr-database-secret
+                  key: password
+            - name: MONGO_REPLICA_HOST
+              value: hr-database-service:27017
+          ports:
+            - containerPort: 27017
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            exec:
+              command: ["mongosh", "--quiet", "/opt/hr/mongo-health.js"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 10
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db
+            - name: mongo-storage
+              mountPath: /data/key
+              subPath: .hr-replica-key
+            - name: scripts
+              mountPath: /opt/hr
       volumes:
-      - name: mongo-storage
-        persistentVolumeClaim:
-          claimName: hr-mongo-pvc
-
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: hr-mongo-pvc
+        - name: scripts
+          configMap:
+            name: hr-mongo-scripts

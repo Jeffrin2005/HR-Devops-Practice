@@ -13,3 +13,7 @@ variable "cluster_role_arn" {
 variable "node_role_arn" {
   type = string
 }
+
+
+variable "cluster_version" { type = string }
+variable "allowed_admin_cidrs" { type = list(string) }

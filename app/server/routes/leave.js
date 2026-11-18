@@ -1,12 +1,14 @@
 import express from 'express';
-import authMiddleware from '../middleware/authMiddleware.js'
-import { addLeave,getLeave,getLeaves,getLeaveDetail,updateLeave } from '../controllers/leaveController.js';
-
-const router = express.Router()
-
-router.post('/add',authMiddleware,addLeave)
-router.get('/:id',authMiddleware,getLeave)
-router.get('/detail/:id',authMiddleware,getLeaveDetail)
-router.get('/',authMiddleware,getLeaves)
-router.put('/:id',authMiddleware,updateLeave)
-export default router
+import auth from '../middleware/authMiddleware.js';
+import roles from '../middleware/roleMiddleware.js';
+import access from '../middleware/employeeAccess.js';
+import { z, date, validate, validateId } from '../lib/validation.js';
+import { addLeave, getLeave, getLeaves, getLeaveDetail, updateLeave } from '../controllers/leaveController.js';
+const router = express.Router();
+router.use(auth);
+router.post('/add', validate(z.object({ leaveType: z.enum(['Sick Leave', 'Casual Leave', 'Annual Leave']), startDate: date, endDate: date, reason: z.string().trim().min(1).max(2000) }).refine(value => value.endDate >= value.startDate, 'End date must not precede start date')), addLeave);
+router.get('/', roles(['admin']), getLeaves);
+router.get('/detail/:id', roles(['admin']), validateId, getLeaveDetail);
+router.get('/:id', validateId, access, getLeave);
+router.put('/:id', roles(['admin']), validateId, validate(z.object({ status: z.enum(['Approved', 'Rejected']) })), updateLeave);
+export default router;

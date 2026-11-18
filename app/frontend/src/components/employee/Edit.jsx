@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { fetchDepartments } from "../../utils/EmployeeHelper";
+import { fetchDepartments } from "../../utils/EmployeeData";
+
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 const Edit = () => {
@@ -22,7 +23,7 @@ const Edit = () => {
                 setDepartments(departments)
             }
            getDepartments();
-        },[]);
+        }, [id]);
 
     useEffect(() =>{
         const fetchEmployee = async () => {
@@ -31,7 +32,7 @@ const Edit = () => {
                 const response = await axios.get(
                     `/api/employee/${id}`,{
                     headers:{
-                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                     }
                 })
                 if(response.data.success){
@@ -42,7 +43,7 @@ const Edit = () => {
                     maritalStatus:employee.maritalStatus,
                     designation:employee.designation,
                     salary:employee.salary,
-                    department:employee.department
+                    department:employee.department?._id || ""
                 }))
                 }
             } catch (error) {
@@ -52,7 +53,7 @@ const Edit = () => {
             } 
         };
         fetchEmployee();
-    },[]);
+    }, [id]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -68,7 +69,7 @@ const Edit = () => {
                 `/api/employee/${id}`,
                 employee,{
                 headers:{
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                 }   
              })
              if(response.data.success){
@@ -142,7 +143,7 @@ const Edit = () => {
           <div>
             <label className="block text-gray-700">Salary</label>
             <input
-              type="number"
+              type="number" min="0" step="0.01"
               name="salary"
               onChange={handleChange}
               value={employee.salary}

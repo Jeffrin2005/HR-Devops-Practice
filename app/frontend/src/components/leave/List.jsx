@@ -1,6 +1,7 @@
+import { useCallback } from 'react';
 import React from "react";
 import { Link, useParams } from "react-router-dom";
-import { useAuth } from "../../context/authContext";
+import { useAuth } from "../../context/useAuth";
 import axios from "axios";
 import { useEffect, useState } from "react";
 const List = () => {
@@ -9,11 +10,11 @@ const List = () => {
     let sno = 1;
     const {id} = useParams()
 
-    const fetchLeaves = async () => {
+    const fetchLeaves = useCallback(async () => {
         try {
           const response = await axios.get(`/api/leave/${id}`, {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
+
             },
           });
           if (response.data.success) {
@@ -24,11 +25,11 @@ const List = () => {
             alert(error.message);
           }
         }
-      };
+      }, [id]);
     
       useEffect(() => {
         fetchLeaves();
-      }, []);
+      }, [fetchLeaves]);
 
     return (
         <>

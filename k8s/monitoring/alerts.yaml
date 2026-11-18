@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: hr-app
+  labels:
+    release: monitoring
+spec:
+  groups:
+    - name: hr.availability
+      rules:
+        - alert: HRBackendUnavailable
+          expr: up{job=~".*hr-backend.*"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: HR backend target is unavailable
+        - alert: HRBackendMissing
+          expr: absent(up{namespace="hr-prod",service="hr-backend-service"})
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Production HR backend has no monitoring targets
+        - alert: HRHighServerErrors
+          expr: sum by (namespace) (rate(hr_http_requests_total{status=~"5.."}[5m])) / clamp_min(sum by (namespace) (rate(hr_http_requests_total[5m])), 0.01) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: More than five percent of HR API requests return server errors

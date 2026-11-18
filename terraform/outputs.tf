@@ -28,13 +28,17 @@ output "eks_cluster_arn" {
   value       = module.eks.cluster_arn
 }
 
-output "docdb_endpoint" {
-  description = "AWS DocumentDB Cluster Endpoint"
-  value       = module.documentdb.db_endpoint
-}
+# output "docdb_endpoint" {
+#   description = "AWS DocumentDB Cluster Endpoint"
+#   value       = module.documentdb.db_endpoint
+# }
 
-output "docdb_cluster_id" {
-  description = "AWS DocumentDB Cluster ID"
-  value       = module.documentdb.cluster_id
-}
+# output "docdb_cluster_id" {
+#   description = "AWS DocumentDB Cluster ID"
+#   value       = module.documentdb.cluster_id
+# }
 
+
+
+output "uploads_bucket" { value = aws_s3_bucket.uploads.id }
+output "docdb_endpoint" { value = try(module.documentdb[0].db_endpoint, null) }

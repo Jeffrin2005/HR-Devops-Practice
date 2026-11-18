@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { fetchDepartments } from "../../utils/EmployeeHelper";
+import { fetchDepartments } from "../../utils/EmployeeData";
+
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 const Add = () => {
@@ -36,7 +37,7 @@ const Add = () => {
              axios.post('/api/employee/add',
                 formDataObj,{
                 headers:{
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                 }   
              })
              if(response.data.success){
@@ -170,7 +171,7 @@ const Add = () => {
           <div>
             <label className="block text-slate-700 font-semibold mb-2">Salary</label>
             <input
-              type="number"
+              type="number" min="0" step="0.01"
               name="salary"
               onChange={handleChange}
               placeholder="Enter salary amount"
@@ -183,7 +184,7 @@ const Add = () => {
             <label className="block text-slate-700 font-semibold mb-2">Password</label>
             <input
               type="password"
-              name="password"
+              name="password" minLength={12} maxLength={72}
               onChange={handleChange}
               placeholder="Enter password"
               className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"

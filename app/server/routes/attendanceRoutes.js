@@ -1,17 +1,12 @@
-import express from "express";
-import { markAttendance, getAttendanceByDate, getEmployeeAttendance, getAttendanceSummary } from "../controllers/attendanceController.js";
-import verifyUser from "../middleware/authMiddleware.js";
-import authorizeRoles from "../middleware/roleMiddleware.js";
-
+import express from 'express';
+import { markAttendance, getAttendanceByDate, getEmployeeAttendance, getAttendanceSummary } from '../controllers/attendanceController.js';
+import auth from '../middleware/authMiddleware.js';
+import roles from '../middleware/roleMiddleware.js';
+import { z, id, date, validate, validateId } from '../lib/validation.js';
 const router = express.Router();
-
-// Only admin can mark and view overall attendance
-router.use(verifyUser);
-router.use(authorizeRoles(["admin"]));
-
-router.post("/", markAttendance); // mark or update
-router.get("/", getAttendanceByDate); // list for date: /attendance?date=YYYY-MM-DD
-router.get("/summary", getAttendanceSummary); // summary range
-router.get("/:id", getEmployeeAttendance); // employee report
-
+router.use(auth, roles(['admin']));
+router.post('/', validate(z.object({ employeeId: id, status: z.enum(['present', 'absent', 'sick', 'leave']), date: date.optional() })), markAttendance);
+router.get('/', getAttendanceByDate);
+router.get('/summary', getAttendanceSummary);
+router.get('/:id', validateId, getEmployeeAttendance);
 export default router;

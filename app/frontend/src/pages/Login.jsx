@@ -1,7 +1,7 @@
 import axios from 'axios';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../context/useAuth';
 
 
 const Login = () => {
@@ -20,7 +20,7 @@ const Login = () => {
            );
            if(response.data.success){
             login(response.data.user)
-            localStorage.setItem("token",response.data.token)
+
             if(response.data.user.role === "admin"){
               navigate("/admin-dashboard")
             } else{
@@ -42,12 +42,6 @@ const Login = () => {
           Employee Management System
         </h1>
         <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">Login</h2>
-        
-        <div className="bg-blue-50 text-blue-800 text-sm p-3 rounded-lg mb-4 text-center">
-          <p className="font-bold mb-1">Demo Credentials:</p>
-          <p>Admin: admin@gmail.com | Password: admin</p>
-          <p>Employee: employee@gmail.com | Password: employee</p>
-        </div>
         {error && <p className="text-red-500">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -76,18 +70,6 @@ const Login = () => {
               required
               className="w-full px-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
             />
-          </div>
-
-          <div className="flex items-center justify-between mb-6">
-            <label className="inline-flex items-center text-sm text-gray-600">
-              <input
-                type="checkbox"
-                className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
-              <span className="ml-2 select-none">Remember me</span>
-            </label>
-            <button type="button" className="text-sm text-indigo-600 hover:underline">
-              Forgot password?
-            </button>
           </div>
 
           <button

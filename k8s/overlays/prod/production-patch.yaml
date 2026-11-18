@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hr-config
+data:
+  NODE_ENV: production
+  APP_ORIGIN: https://hr.example.com
+  UPLOAD_BUCKET: REPLACE_WITH_UPLOAD_BUCKET
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hr-backend-deployment
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    spec:
+      containers:
+        - name: backend-container
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/public/uploads
+      volumes:
+        - name: uploads
+          persistentVolumeClaim: null
+          emptyDir: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hr-ingress
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  tls:
+    - hosts: [hr.example.com]
+      secretName: hr-tls
+  rules:
+    - host: hr.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hr-frontend-service
+                port:
+                  number: 80
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hr-uploads-pvc
+$patch: delete

@@ -1,31 +1,15 @@
-# Stage 1: Build the Vite React app
-FROM node:20-alpine AS builder
-
-# Set working directory
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS builder
 WORKDIR /app
-
-# Copy package files and install dependencies
-COPY package*.json ./
-RUN npm install
-
-# Copy source code and build the app
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
 COPY . .
 RUN npm run build
 
-# Stage 2: Serve the app with Nginx
-FROM nginx:alpine
-
-# Patch Linux vulnerabilities caught by Trivy
+FROM nginxinc/nginx-unprivileged:stable-alpine@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03
+USER root
 RUN apk upgrade --no-cache
-
-# Copy the built files from Stage 1 into the Nginx container
+USER 101
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy the custom Nginx configuration to fix React routing
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Expose port 80 for web traffic
-EXPOSE 80
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+ENV BACKEND_HOST=hr-backend-service
+EXPOSE 8080

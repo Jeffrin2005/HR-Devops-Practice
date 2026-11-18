@@ -1,7 +1,8 @@
+import { columns as employeeColumns } from "../../utils/EmployeeData";
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { EmployeeButtons, columns as employeeColumns } from "../../utils/EmployeeHelper";
+import { EmployeeButtons } from "../../utils/EmployeeHelper";
 import DataTable from "react-data-table-component";
 
 const List = () => {
@@ -15,7 +16,7 @@ const List = () => {
         try {
             const response = await axios.get('/api/employee',{
                 headers:{
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                 }
             })
             if(response.data.success){
@@ -28,7 +29,7 @@ const List = () => {
                         name: emp.userID?.name,
                         dob: new Date(emp.dob).toLocaleDateString(),
                         profileImage:
-    <img src={`/${emp.userID?.profileImage}`}/>,
+    <img src={`/api/uploads/${emp.userID?.profileImage}`}/>,
                         action: (<EmployeeButtons Id={emp._id}/>),
                     })); 
                 setEmployees(data);

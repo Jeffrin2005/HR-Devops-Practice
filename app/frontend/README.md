@@ -1,12 +1,16 @@
-# React + Vite
+# HR frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[Project](../../README.md) · [Setup](../../docs/LOCAL-DEVELOPMENT.md)
 
-Currently, two official plugins are available:
+React 19/Vite UI for administrator and employee workflows: profiles, departments, salary, leave, attendance administration, and password settings.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```sh
+npm ci --ignore-scripts
+npm run dev
+npm run lint
+npm run build
+```
 
-## Expanding the ESLint configuration
+Vite proxies /api to http://127.0.0.1:5000. Run the API with APP_ORIGIN=http://localhost:5173 and an accessible database URI.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Authentication uses same-origin HttpOnly cookies. Route guards handle navigation; the API independently enforces permissions. The Dockerfile builds static assets and runs unprivileged Nginx on port 8080. BACKEND_HOST selects the API upstream. Nginx sets browser security headers and blocks public health/metrics paths.

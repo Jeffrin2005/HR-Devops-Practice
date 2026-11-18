@@ -13,14 +13,14 @@ const ProfileItem = ({ label, value }) => (
 const View = () => {
     const {id} = useParams()
     const [employee, setEmployee] = useState(null)
-    useEffect(() => { 
+    useEffect(() => {
         const fetchEmployee = async () => {
-       
+
             try {
                 const response = await axios.get(
                     `/api/employee/${id}`,{
                     headers:{
-                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                     }
                 })
                 if(response.data.success){
@@ -30,11 +30,11 @@ const View = () => {
                if(error.response && !error.response.data.success){
                 console.error("Fetch department error:", error.response.data.error);
                }
-            } 
+            }
         };
         fetchEmployee();
-    },[]); 
-    
+    }, [id]);
+
     return (
         <>
         {employee ? (
@@ -56,7 +56,7 @@ const View = () => {
                 {/* Avatar */}
                 <div className="flex justify-center md:justify-start">
                   <img
-                    src={`/${employee.userID?.profileImage}`}
+                    src={`/api/uploads/${employee.userID?.profileImage}`}
                     alt="Profile"
                     className="rounded-full border-4 border-cyan-500 w-56 h-56 object-cover shadow-md"
                   />

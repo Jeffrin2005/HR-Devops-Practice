@@ -1,18 +1,13 @@
-import mongoose  from "mongoose";
-import { Schema } from "mongoose";
-
-const employeeSchema = new Schema({
-    userID: {type:Schema.Types.ObjectId,ref:"User",
-        required:true},
-    employeeID:{type:String,required:true,unique:true},
-    dob:{type:Date},
-    gender:{type:String},
-    maritalStatus:{type:String},
-    designation:{type:String},
-    department:{type:Schema.Types.ObjectId,ref:"Department",required:true},
-    salary:{type:Number,required:true},
-    createdAt:{type:Date,default:Date.now},
-    updatedAt:{type:Date,default:Date.now},
-});
-const Employee  = mongoose.model("Employee",employeeSchema);
-export default Employee;
+import mongoose from 'mongoose';
+const employeeSchema = new mongoose.Schema({
+  userID: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+  employeeID: { type: String, required: true, unique: true, trim: true, maxlength: 200 },
+  dob: Date,
+  gender: { type: String, maxlength: 200 },
+  maritalStatus: { type: String, maxlength: 200 },
+  designation: { type: String, maxlength: 200 },
+  department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department', required: true },
+  salary: { type: Number, required: true, min: 0 },
+}, { timestamps: true });
+employeeSchema.index({ department: 1 });
+export default mongoose.model('Employee', employeeSchema);

@@ -1,0 +1,6 @@
+# Only for an isolated development cluster using HTTP.
+ports:
+  web:
+    http:
+      redirections:
+        entryPoint: null

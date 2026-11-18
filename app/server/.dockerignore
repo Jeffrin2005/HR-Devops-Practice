@@ -5,3 +5,7 @@ npm-debug.log*
 .env*
 README.md
 
+public/uploads/*
+!public/uploads/.gitkeep
+test
+coverage

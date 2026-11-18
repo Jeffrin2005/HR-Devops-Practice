@@ -32,4 +32,3 @@ output "node_group_arn" {
   description = "EKS Node Group ARN"
   value       = aws_eks_node_group.main.arn
 }
-

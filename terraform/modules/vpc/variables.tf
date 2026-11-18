@@ -13,3 +13,6 @@ variable "private_subnet_cidrs" {
 variable "vpc_name" {
   type = string
 }
+
+
+variable "single_nat_gateway" { type = bool }

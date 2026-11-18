@@ -12,7 +12,7 @@ const AdminSummary = () => {
       try {
         const summary = await axios.get('/api/dashboard/summary',{
           headers:{
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+
           }
         })
         setSummary(summary.data)

@@ -3,7 +3,9 @@ kind: Deployment
 metadata:
   name: hr-backend-deployment
 spec:
-  replicas: 2
+  replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: hr-backend
@@ -11,15 +13,76 @@ spec:
     metadata:
       labels:
         app: hr-backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
     spec:
+      serviceAccountName: hr-backend
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
-      - name: backend-container
-        image: jeffrinjojo/hr-backend:b3c444fc4ced83954de9de910e4182e415f5f85b
-        ports:
-        - containerPort: 5000
-        env:
-        - name: MONGO_URI
-          value: "mongodb://hr-database-service:27017/hr_db"
-        - name: JWT_KEY
-          value: "supersecretkey123"
-
+        - name: backend-container
+          image: jeffrinjojo/hr-backend:RELEASE_REQUIRED
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: hr-config
+          env:
+            - name: MONGODB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: hr-api-secret
+                  key: MONGODB_URL
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hr-api-secret
+                  key: JWT_KEY
+            - name: UPLOAD_DIR
+              value: /app/public/uploads
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 5000
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 5000
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 5000
+            periodSeconds: 10
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/public/uploads
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: hr-uploads-pvc
+        - name: tmp
+          emptyDir: {}

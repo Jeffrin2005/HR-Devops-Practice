@@ -1,0 +1,28 @@
+# Traefik Helm values for a dedicated ingress-system namespace.
+deployment:
+  replicas: 2
+ingressClass:
+  name: traefik
+  isDefaultClass: false
+providers:
+  kubernetesIngress:
+    ingressClass: traefik
+    publishedService:
+      enabled: true
+log:
+  format: json
+accessLog:
+  enabled: true
+  format: json
+ports:
+  web:
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    http:
+      tls:
+        enabled: true

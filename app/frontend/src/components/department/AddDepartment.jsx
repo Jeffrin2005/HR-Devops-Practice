@@ -17,7 +17,7 @@ const AddDepartment = () => {
             const response = await 
              axios.post('/api/department/add',department,{
                 headers:{
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+
                 }   
              })
              if(response.data.success){

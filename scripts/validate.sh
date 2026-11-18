@@ -1,25 +1,17 @@
-#!/bin/bash
-set -e
-
-echo "🔍 Validating HR-Devops-Practice codebase..."
-
-echo "1. Validating Kubernetes base manifests..."
-kubectl kustomize k8s/base > /dev/null
-echo "   ✅ k8s/base OK"
-
-for env in dev staging prod; do
-    echo "2. Validating Kubernetes overlay: $env..."
-    kubectl kustomize "k8s/overlays/$env" > /dev/null
-    echo "   ✅ k8s/overlays/$env OK"
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+for environment in dev staging prod; do
+  kubectl kustomize "k8s/overlays/$environment" >/dev/null
 done
-
-echo "3. Validating Docker Compose configuration..."
-docker compose config > /dev/null 2>&1 || true
-echo "   ✅ docker-compose.yml checked"
-
-echo "4. Validating Terraform formatting..."
-terraform -chdir=terraform fmt -check > /dev/null 2>&1 || true
-echo "   ✅ terraform/ fmt checked"
-
-echo "🎉 All validations completed successfully!"
-
+kubectl kustomize k8s/monitoring >/dev/null
+# Values here are throwaway parser inputs; no containers are launched.
+MONGO_USERNAME=validation MONGO_PASSWORD=validation JWT_KEY=validation docker compose config --quiet
+terraform -chdir=terraform fmt -check -recursive
+terraform -chdir=terraform init -backend=false -input=false
+terraform -chdir=terraform validate
+npm --prefix app/server ci --ignore-scripts
+npm --prefix app/server test
+npm --prefix app/frontend ci --ignore-scripts
+npm --prefix app/frontend run lint
+npm --prefix app/frontend run build

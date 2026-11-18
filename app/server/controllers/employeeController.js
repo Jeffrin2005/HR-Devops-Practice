@@ -1,160 +1,42 @@
-import Employee from "../models/Employee.js";
-import User from "../models/User.js";
-import bcrypt from "bcrypt"
-import multer from "multer"
-import path from "path"
-import Department from "../models/Department.js";
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, 'public/uploads')
-    },
-    filename: function (req, file, cb) {
-      cb(null, Date.now() + '-' + path.extname(file.originalname))
-
-    }
-  })
-
-const upload = multer({ storage: storage })
-
-const addEmployee = async (req,res) => {
-    try{
- 
-        const{
-            name,
-            email,
-            employeeID,
-            dob,
-            gender,
-            maritalStatus,
-            designation,
-            department,
-            salary,
-            password,
-            role,
-        } = req.body;
-
-        const user = await User.findOne({email})
-        if(user){
-            return res.status(400).json({
-                success:false,
-                message:"User already registered in employee"
-            })
-        }    
-        const hashedPassword = await bcrypt.hash(password,10)
-        const newUser = new User({
-            name,
-            email,
-            password:hashedPassword,
-            role,
-            profileImage: req.file ? req.file.filename : ""
-        })
-        const savedUser = await newUser.save()
-
-        const newEmployee = new Employee({
-            userID: savedUser._id,
-            employeeID,
-            dob,
-            gender,
-            maritalStatus,
-            designation,
-            department,
-            salary,
-            
-        })
-        await newEmployee.save()
-        return res.status(200).json({
-            success:true,
-            message:"Employee created successfully"
-        })
-    } catch(error){
-        return res.status(500).json({
-            success:false,
-            message:"Server error in adding employee"
-        })
-    }
-
-}
-
-const getEmployees = async (req, res) => { 
-    try { 
-        const employees = await Employee.find()
-            .populate('userID', { password: 0 })
-            .populate("department")
-        return res.status(200).json({success: true,employees})
-    } catch (error) {
-        return res.status(500).json({success: false, error: "Get employees server error"})
-    }
-}
-
-const getEmployee = async (req, res) => { 
-    const {id} = req.params; 
-
-    try { 
-        let employee;                       
-        employee = await Employee.findById(id)
-            .populate('userID', { password: 0 })
-            .populate("department");
-            if(!employee){
-                employee = await Employee.findOne({ userID: id })
-                .populate('userID', { password: 0 })
-                .populate("department");
-            }
-        return res.status(200).json({success: true,employee})
-    } catch (error) {
-        return res.status(500).json({success: false, error: "Get employees server error"})
-    }
-}
-
-const updateEmployee = async (req, res) => {
-      try{
-        const {id} = req.params;
-        const{
-            name,
-            maritalStatus,
-            designation,
-            department,
-            salary,
-        } = req.body;
-
-        const employee = await Employee.findById({_id:id})
-        if(!employee){
-            return res.status(404).json({success: false, error: "Employee not found"})
-        }
-
-        const user = await User.findById({_id: employee.userID})
-        if(!user){
-            return res.status(404).json({success: false, error: "User not found"})
-        }
-
-        const updateUser = await User.findByIdAndUpdate({_id: employee.userID}, { name })
-        const updateEmployee = await Employee.findByIdAndUpdate({_id:id},
-            {
-                maritalStatus
-                ,designation,
-                salary, department})
-        if(!updateEmployee || !updateUser){
-            return res.status(404).json({success: false, error: "document not found"})
-        }
-        return res.status(200).json({success: true, message: "Employee updated successfully"})
-
-      }catch(error){
-        return res.status(500).json({success: false, error: "Update employees server error"})
-      }
-}
-
-
-
-const fetchEmployeesByDepId = async (req, res) => {
-    const {id} = req.params; 
-
-    try { 
-        const employees = await Employee.find({department:id})
-        
-        return res.status(200).json({success: true,employees})
-    } catch (error) {
-        return res.status(500).json({success: false, error: "Get employeesByDepID server error"})
-    }
-}
-
-export {addEmployee, upload , getEmployees, getEmployee , updateEmployee,fetchEmployeesByDepId} 
+import mongoose from 'mongoose';
+import Employee from '../models/Employee.js';
+import User from '../models/User.js';
+import Department from '../models/Department.js';
+import bcrypt from 'bcrypt';
+import { upload, saveImage, removeImage } from '../lib/uploads.js';
+export { upload };
+export const addEmployee = async (req, res) => {
+  const { name, email, password, role, ...employeeData } = req.body;
+  if (!await Department.exists({ _id: employeeData.department, archived: { $ne: true } })) return res.status(400).json({ success: false, error: 'Select an active department' });
+  const hash = await bcrypt.hash(password, 12);
+  const profileImage = await saveImage(req.file);
+  try {
+    await mongoose.connection.transaction(async session => {
+      const [user] = await User.create([{ name, email, password: hash, role, profileImage }], { session });
+      await Employee.create([{ ...employeeData, userID: user._id }], { session });
+    });
+  } catch (error) { await removeImage(profileImage); throw error; }
+  res.status(201).json({ success: true, message: 'Employee created successfully' });
+};
+export const getEmployees = async (_req, res) => {
+  const employees = await Employee.find().populate('userID', 'name email profileImage role').populate('department');
+  res.json({ success: true, employees });
+};
+export const getEmployee = async (req, res) => {
+  const employee = await Employee.findById(req.employee._id).populate('userID', 'name email profileImage role').populate('department');
+  res.json({ success: true, employee });
+};
+export const updateEmployee = async (req, res) => {
+  const { name, ...fields } = req.body;
+  if (fields.department && !await Department.exists({ _id: fields.department, archived: { $ne: true } })) return res.status(400).json({ success: false, error: 'Select an active department' });
+  await mongoose.connection.transaction(async session => {
+    const employee = await Employee.findByIdAndUpdate(req.params.id, fields, { new: true, runValidators: true, session });
+    if (!employee) throw Object.assign(new Error('Employee not found'), { status: 404 });
+    if (name && !await User.findByIdAndUpdate(employee.userID, { name }, { runValidators: true, session })) throw Object.assign(new Error('User not found'), { status: 404 });
+  });
+  res.json({ success: true, message: 'Employee updated successfully' });
+};
+export const fetchEmployeesByDepId = async (req, res) => {
+  const employees = await Employee.find({ department: req.params.id }).select('_id employeeID');
+  res.json({ success: true, employees });
+};

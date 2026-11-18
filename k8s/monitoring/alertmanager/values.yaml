@@ -1,25 +1,23 @@
+# Optional override for k8s/monitoring/values.yaml. Configure real sender/recipient
+# addresses locally and create monitoring/hr-alert-smtp with a password key.
 alertmanager:
+  alertmanagerSpec:
+    secrets: [hr-alert-smtp]
   config:
     global:
-      smtp_smarthost: 'smtp.gmail.com:587'
-      smtp_from: 'jetsetterflash@gmail.com'
-      smtp_auth_username: 'jetsetterflash@gmail.com'
-      smtp_auth_password: 'sjhz kliy ctwe gqpi'
+      smtp_smarthost: smtp.gmail.com:587
+      smtp_from: REPLACE_WITH_SENDER
+      smtp_auth_username: REPLACE_WITH_SENDER
+      smtp_auth_password_file: /etc/alertmanager/secrets/hr-alert-smtp/password
       smtp_require_tls: true
     route:
-      group_by: ['namespace']
-      group_wait: 10s
+      receiver: email-alert
+      group_by: [namespace, alertname]
+      group_wait: 30s
       group_interval: 5m
-      repeat_interval: 1h
-      receiver: 'email-alert'
-      # We tell it to send the "Watchdog" test alert so you get an email instantly!
-      routes:
-        - matchers:
-            - alertname = "Watchdog"
-          receiver: 'email-alert'
+      repeat_interval: 4h
     receivers:
-      - name: 'email-alert'
+      - name: email-alert
         email_configs:
-          - to: 'jetsetterflash@gmail.com'
+          - to: REPLACE_WITH_RECIPIENT
             send_resolved: true
-
